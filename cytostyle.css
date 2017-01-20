@@ -1,0 +1,18 @@
+.full_screen {
+    width: 100%;
+    height: 100%;
+    margin: 0px;
+}
+
+#add_node_button {
+    width: 10%;
+    height: 5%;
+    float: right;
+    right: 20px;
+    top: 20px;
+    position: absolute;
+}
+
+node {
+    shape: rectangle;
+}
