@@ -11,14 +11,15 @@ window.onload = function () {
         style: [{
             selector: 'node',
             style: {
-                'shape': 'rectangle'
+                'shape': 'rectangle',
+                'label': 'data(label)'
             }
         }]
     });
     cy.minZoom(0.5);
     cy.maxZoom(3);
 
-    cy.on('tap', function(event){
+    cy.on('tapstart', function(event){
         var target = event.cyTarget;
         if(target === cy) {
             currentNode = null;
@@ -37,29 +38,39 @@ window.onload = function () {
                         target: event.cyTarget.id()
                     }
                 });
-                console.log("added");
-                currentNode = null;
             }
         }
     });
     
-    cy.on('tapend', 'node', function(event){
-        var node = event.cyTarget;
-        var snap_position = snapToLines(node.position().x, node.position().y);
-        node.position().x = snap_position.x;
-        node.position().y = snap_position.y;
-        graph.update_node(node);
+    cy.on('tapend', function(event){
+        if(currentNode !== null) {
+            currentNode.align("top", "left");
+            graph.update_node(currentNode);
+            currentNode.align("top", "left");
+        }
+    });
+
+    cy.gridGuide({
+        snapToGrid: true,
+        drawGrid: true,
+        gridSpacing: 80,
+        strokeStyle: '#dbad78'
     });
 };
 
 function addNode(event) {
-    var snap_position = snapToLines(event.x, event.y);
+    var snap_position = mouseToWorldCoordinates(event.x, event.y);
     var new_node = cy.add({
         group: "nodes",
-        data: {weight: 75},
-        position: {x: snap_position.x, y: snap_position.y}
+        data: {label: "new node"},
+        position: {x: snap_position.x, y: snap_position.y},
     });
-    graph.add_node(new_node.id(), snap_position.x, snap_position.y);
+
+    new_node.align("top", "left");
+
+    if(!graph.add_node(new_node.id(), new_node.position().x, new_node.position().y)) {
+        cy.remove(new_node);
+    }
 }
 
 function clampViewPort() {
@@ -77,13 +88,10 @@ function clampViewPort() {
     }
 }
 
-function snapToLines(x, y) {
+function mouseToWorldCoordinates(x, y) {
     var zoom = cy.zoom();
-    var distance = 80;
     x = x / zoom + cy.extent().x1;
     y = y / zoom + cy.extent().y1;
-    x = Math.round(x / distance) * distance;
-    y = Math.round(y / distance) * distance;
     return {
         x: x,
         y: y

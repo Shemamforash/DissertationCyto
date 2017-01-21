@@ -2,12 +2,24 @@
  * Created by Sam on 20/01/2017.
  */
 var graph = (function(){
-    var nodes = [];
+    var nodes = {};
     var edges = [];
+    var tags = [];
+    var i;
+
+    function node_overlaps(x, y, id){
+        for(var node in nodes){
+            node = nodes[node];
+            if(node.x === x && node.y === y && id !== node.id) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     return {
         add_edge: function(origin, end) {
-            for(var i = 0; i < edges.length; ++i) {
+            for(i = 0; i < edges.length; ++i) {
                 var e = edges[i];
                 if((e.origin === origin && e.end === end) || (e.end === origin && e.origin === end)){
                     return false;
@@ -17,14 +29,20 @@ var graph = (function(){
             return true;
         },
         add_node: function(id, x, y) {
-            nodes.push(create_node(id, x, y));
+            if(node_overlaps(x, y, id)){
+                return false;
+            }
+            nodes[id] = create_node(id, x, y);
+            return true;
         },
         update_node: function(node){
-            for(var i = 0; i < nodes.length; ++i){
-                if(nodes[i].id === node.id()) {
-                    nodes[i].x = node.x;
-                    nodes[i].y = node.y;
-                }
+            var graph_node = nodes[node.id()];
+            if(node_overlaps(node.position().x, node.position().y, node.id())){
+                node.position().x = graph_node.x;
+                node.position().y = graph_node.y;
+            } else {
+                graph_node.x = node.position().x;
+                graph_node.y = node.position().y;
             }
         }
     }
