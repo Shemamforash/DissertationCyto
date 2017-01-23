@@ -3,14 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <title>Economy Simulator</title>
+
+    <!--css-->
     <link rel="stylesheet" href="cytostyle.css">
+    <link rel="stylesheet" href="libraries/semantic.min.css">
+
+    <!--external js-->
     <script src="http://code.jquery.com/jquery-2.0.3.min.js"></script>
-    <script src="cytoscape.min.js"></script>
-    <script src="cytoscape-grid-guide.js"></script>
-    <script src="graphbackend.js"></script>
-    <script src="graphvisualisation.js"></script>
+    <script src="libraries/cytoscape.min.js"></script>
+    <script src="libraries/cytoscape-snap-to-grid.js"></script>
+    <script src="libraries/semantic.min.js"></script>
+
+    <!--internal js-->
+    <script src="source/graphbackend.js"></script>
+    <script src="source/graphvisualisation.js"></script>
+    <script src="source/htmlbehaviour.js"></script>
 </head>
 <body class="full_screen" onmouseup="clampViewPort()">
-    <div id="cy_div" class="full_screen" ondblclick="addNode(event)"></div>
+
+<!--cytoscape-->
+<div id="cy_div" class="full_screen" ondblclick="addNode(event)"></div>
+
+<!--sidebar to control graph attributes-->
+<div id="graph_sidebar" class="sidebar">
+    <button id="toggle_graph_sidebar" onclick="toggleGraphSidebar()" onmouseover="expandGraphSideBar()" onmouseout="minimiseGraphSideBar()"></button>
+    <div id="left_container">
+        <button class="accordion">Tags</button>
+        <div class="accordion_container">
+            <div class="tag">Tag 1</div>
+            <div class="tag">Tag 2</div>
+            <div class="tag">Tag 3</div>
+        </div>
+    </div>
+</div>
+
+<!--sidebar to control node attributes-->
+<div id="node_sidebar" class="sidebar">
+    <div id="sidebar_content">
+        <input type="text" id="node_label" value="New Node" oninput="changeNodeLabel(this.value)">
+    </div>
+</div>
 </body>
 </html>

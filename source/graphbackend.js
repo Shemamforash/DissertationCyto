@@ -17,6 +17,21 @@ var graph = (function(){
         return false;
     }
 
+    function create_edge(origin, end){
+        return {
+            origin: origin,
+            end: end
+        };
+    }
+
+    function create_node(id, x, y){
+        return {
+            id: id,
+            x: x,
+            y: y
+        };
+    }
+
     return {
         add_edge: function(origin, end) {
             for(i = 0; i < edges.length; ++i) {
@@ -35,7 +50,7 @@ var graph = (function(){
             nodes[id] = create_node(id, x, y);
             return true;
         },
-        update_node: function(node){
+        update_node_position: function(node){
             var graph_node = nodes[node.id()];
             if(node_overlaps(node.position().x, node.position().y, node.id())){
                 node.position().x = graph_node.x;
@@ -44,21 +59,12 @@ var graph = (function(){
                 graph_node.x = node.position().x;
                 graph_node.y = node.position().y;
             }
+        },
+        update_node_property: function(node, prop, val) {
+            var graph_node = nodes[node.id()];
+            if(graph_node.hasOwnProperty(prop)){
+                graph_node[prop] = val;
+            }
         }
     }
 }());
-
-create_edge = function(origin, end){
-    return {
-        origin: origin,
-        end: end
-    };
-};
-
-create_node = function(id, x, y){
-    return {
-        id: id,
-        x: x,
-        y: y
-    };
-};
