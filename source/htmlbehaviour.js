@@ -17,17 +17,17 @@ function toggleGraphSidebar() {
 
 function expandGraphSideBar() {
     if (!sidebarOpen) {
-        $('#graph_sidebar').width("40px");
-        $('#toggle_graph_sidebar').text(">");
-        $('#toggle_graph_sidebar').width("40px");
+        // $('#graph_sidebar').width("40px");
+        // $('#sidebar_opener').text(">");
+        // $('#sidebar_opener').width("40px");
     }
 }
 
 function minimiseGraphSideBar() {
     if (!sidebarOpen) {
-        $('#graph_sidebar').width("10px");
-        $('#toggle_graph_sidebar').text("");
-        $('#toggle_graph_sidebar').width("10px");
+        // $('#graph_sidebar').width("10px");
+        // $('#sidebar_opener').text("");
+        // $('#sidebar_opener').width("10px");
     }
 }
 
@@ -43,18 +43,23 @@ function changeNodeLabel(text) {
     currentNode.get().data('label', text);
 }
 
-$(document).ready(function() {
-    var acc = document.getElementsByClassName("accordion");
-    for(var i = 0; i < acc.length; ++i){
-        acc[i].onclick = function(){
-            this.classList.toggle("active");
-            var panel = this.nextElementSibling;
-            if(panel.style.display === "block"){
-                panel.style.display = "none";
-            } else {
-                panel.style.display = "block";
-            }
-        }
-    }
-    }
-);
+$(document).ready(function () {
+    $('.ui.accordion').accordion({
+        exclusive: false
+    });
+    $('.ui.sidebar').sidebar('toggle');
+    $('#graph_sidebar').sidebar('attach events', '#sidebar_opener');
+    // $('.sidebar').sidebar('setting', {
+    //     dimPage: false,
+    //     defaultTransition: {
+    //         computer : {
+    //             left: 'overlay'
+    //         }
+    //     }
+    // });
+    $('.ui.sidebar').sidebar({
+        transition: 'overlay',
+        dimPage: false,
+        exclusive: true
+    });
+});
