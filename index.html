@@ -16,24 +16,25 @@
     <script src="semantic/dist/semantic.min.js"></script>
 
     <!--internal js-->
-    <!--<script src="source/graphbackend.js"></script>-->
-    <!--<script src="source/graphvisualisation.js"></script>-->
+    <script src="source/graphbackend.js"></script>
+    <script src="source/graphvisualisation.js"></script>
     <script src="source/htmlbehaviour.js"></script>
 </head>
 <body class="full_screen" onmouseup="clampViewPort()">
 
 <!--sidebar to control graph attributes-->
 <div id="graph_sidebar" class="ui left inverted sidebar vertical menu">
-    <!--<div id="left_container treemenu">-->
-    <!--<div class="ui fluid styled accordion">-->
-    <!--<div class="fluid ui title">Tags</div>-->
-    <!--<div class="content">-->
-    <!--<div class="subtitle">Tag 1</div>-->
-    <!--<div class="subtitle">Tag 2</div>-->
-    <!--<div class="subtitle">Tag 3</div>-->
-    <!--</div>-->
-    <!--</div>-->
-    <!--</div>-->
+    <div id="left_container menu inverted">
+        <div class="ui fluid accordion">
+            <div class="fluid ui title inverted header green"><i class="icon tags inverted green"></i>Tags</div>
+            <div class="content inverted" id="tag_list">
+                <div class="ui buttons fluid inverted" id="tag_editor">
+                    <div class="ui button inverted" id="add_tag_button"><i class="icon plus"></i>New</div>
+                    <div class="ui button inverted" id="edit_tags_button"><i class="edit icon"></i>Edit</div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!--sidebar to control node attributes-->
@@ -45,8 +46,10 @@
 
 
 <!--cytoscape-->
-<div id="cy_div" class="full_screen pusher" ondblclick="addNode(event)"></div>
-<button class="ui button left attached fluid" id="sidebar_opener" onmouseover="expandGraphSideBar()" onmouseout="minimiseGraphSideBar()"></button>
+<div id="main_container" class="full_screen pusher">
+    <div id="cy_div" class="full_screen" ondblclick="addNode(event)"></div>
+    <button class="ui button attached fluid green" id="sidebar_opener"></button>
+</div>
 
 </body>
 </html>
