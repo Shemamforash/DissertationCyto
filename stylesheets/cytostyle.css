@@ -41,19 +41,6 @@ node {
     /*height: 40px;*/
 }
 
-.accordion.active, .accordion:hover {
-    background-color: aquamarine;
-}
-
-.accordion_container {
-    display: none;
-}
-
-.tag {
-    height: 40px;
-    line-height: 40px;
-}
-
 #left_container {
     height: calc(100% - 80px);
     width: calc(100% - 132px);
