@@ -30,3 +30,16 @@ body {
     width: 20%;
     padding: 40px;
 }
+
+.tag_edit {
+    width: 100%;
+}
+
+input {
+    height: 40px;
+    line-height: 40px;
+}
+
+.tag_divider {
+    height: 5px;
+}

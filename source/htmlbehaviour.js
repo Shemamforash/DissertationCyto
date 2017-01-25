@@ -32,14 +32,16 @@ function setEditingMode(mode){
     editing = mode;
     if (mode) {
         $('.tag_edit').removeClass('disabled');
-        var delete_button = $('<div class="ui icon button tag_delete inverted"><i class="remove icon"></i></div>');
+        var delete_button = $('<div class="ui icon button tag_delete inverted right attached"><i class="remove icon"></i></div>');
         delete_button.click(function(){
             $(this).parent().remove();
         });
         $('.tag_edit').append(delete_button);
+        $('.tag_edit > .tag.icon').remove();
     } else {
         $('.tag_edit').addClass("disabled");
         $('.tag_edit > .tag_delete').remove();
+        $('.tag_edit').append($('<i class="tag icon inverted"></i>"'));
     }
 }
 
@@ -62,12 +64,12 @@ $(document).ready(function () {
     });
     $('#add_tag_button').click(function () {
         setEditingMode(false);
-        $('#tag_editor').before($('<div class="ui inverted segment tag_edit">' +
-                                    '<div class="ui inverted transparent fluid icon input">' +
-                                        '<input type="text" placeholder="tag">' +
+        $('#tag_editor').before($('<div class="ui inverted transparent fluid">' +
+                                    '<div class="ui icon disabled input inverted transparent tag_edit">' +
+                                        '<input type="text" placeholder="Tag name...">' +
                                         '<i class="tag icon inverted"></i>' +
                                     '</div>' +
-                                '</div><div class="ui divider inverted"></div>'));
+                                '</div>'));
     });
     $('#edit_tags_button').click(function () {
         setEditingMode(!editing);
