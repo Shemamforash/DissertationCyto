@@ -39,33 +39,66 @@ var eles, a, Behaviour = {
             $(this).text("");
         });
         eles.add_tag.click(Behaviour.addTag);
-        eles.edit_tag.click(Behaviour.editTag);
         eles.edit_node_name.click(Behaviour.editNodeName);
     },
 
     addTag: function () {
-        Behaviour.setEditingMode(false);
-        eles.tag_editor.before($('<div class="ui inverted transparent fluid">' +
-            '<div class="ui icon disabled input inverted transparent tag_edit">' +
+        var element = $('<div class="ui input inverted transparent tag_edit right labelled">' +
             '<input type="text" placeholder="Tag name...">' +
-            '<i class="tag icon"></i>' +
+            '<div class="ui buttons">' +
             '</div>' +
-            '</div>'));
+            '</div>');
+        Behaviour.finish_editing(element);
+        eles.tag_editor.before(element);
     },
 
-    editTag: function () {
-        Behaviour.setEditingMode(!a.editing);
-        var icon = eles.edit_tag.find('.icon');
-        // var icon = $('#edit_tags_button > .icon');
-        if (eles.edit_tag.text().indexOf("Edit") !== -1) {
-            eles.edit_tag.html("Done");
+    start_editing: function (element) {
+        var button_group = $(element).find('.ui.buttons');
+        var delete_button = $('<div class="ui button icon inverted white right attached delete_button">' +
+            '<i class="remove icon"></i></div>');
+        delete_button.click(function () {
+            Behaviour.delete_tag(element);
+        });
+        var done_button = $('<div class="ui button icon inverted white right attached delete_button">' +
+            '<i class="checkmark icon"></i></div>');
+        done_button.click(function () {
+            Behaviour.finish_editing(element);
+        });
+        button_group.html("");
+        button_group.append(delete_button);
+        button_group.append(done_button);
+        $(element).toggleClass("disabled");
+    },
+
+    finish_editing: function (element) {
+        var button_group = $(element).find('.ui.buttons');
+        var edit_button = $('<div class="ui button icon inverted white right attached edit_button">' +
+            '<i class="edit icon"></i></div>');
+        edit_button.click(function () {
+            Behaviour.start_editing(element)
+        });
+        button_group.html("");
+        button_group.append(edit_button);
+        $(element).toggleClass("disabled");
+
+        var tag_name = $(element).find('input').val();
+        var old_name = $(element).attr("id");
+        if(Graph.tags.update($(element).attr("id"), tag_name)){
+            $(element).attr("id", tag_name);
         } else {
-            eles.edit_tag.html("Edit");
-            Behaviour.checkNewTags();
+            $(element).find('input').val(old_name);
         }
-        eles.edit_tag.prepend(icon);
-        icon.toggleClass('checkmark');
-        icon.toggleClass('edit');
+    },
+
+    delete_tag: function (element) {
+        var tag_name = $(element).attr("id");
+        if(tag_name !== ""){
+            if(!Graph.tags.remove(tag_name)){
+                console.log("Tag did not exist for some reason..." + tag_name);
+            } else {
+                $(element).remove();
+            }
+        }
     },
 
     editNodeName: function () {
@@ -96,51 +129,5 @@ var eles, a, Behaviour = {
 
     changeNodeLabel: function (text) {
         currentNode.get().data('label', text);
-    },
-
-    setEditingMode: function (mode) {
-        a.editing = mode;
-        var tag_edit = $('.tag_edit');
-        if (mode) {
-            //User is editing tag names
-            tag_edit.removeClass('disabled');
-            var delete_button = $('<div class="ui icon button tag_delete inverted right attached"><i class="remove icon"></i></div>');
-            delete_button.click(function () {
-                $(this).parent().remove();
-                Behaviour.removeTag(delete_button.parent().attr('id'));
-            });
-            tag_edit.append(delete_button);
-            tag_edit.find('.tag.icon').remove();
-        } else {
-            //User has finished editing tags
-            tag_edit.addClass("disabled");
-            tag_edit.find('.tag_delete').remove();
-            for (var i = 0; i < tag_edit.length; ++i) {
-                if ($(tag_edit[i]).find('.tag.icon').length === 0) {
-                    tag_edit.append($('<i class="tag icon"></i>"'));
-                }
-            }
-        }
-    },
-
-    checkNewTags: function () {
-        var tag_elements = $('.tag_edit > input');
-        for (var i = 0; i < tag_elements.length; ++i) {
-            var tag_name = $(tag_elements[i]).val();
-            if (tag_name !== "") {
-                if (!Graph.tags.is_bound(tag_name, tag_elements[i])) {
-                    if (!Graph.tags.add($(tag_elements[i]), tag_name)) {
-                        $(tag_elements[i]).val($(tag_elements[i]).attr("id"));
-                    } else {
-                        $('#tag_dropdown').append('<div class="item">' +
-                            '<div class="ui red empty circular label"></div>' + tag_name + '</div>');
-                    }
-                }
-            }
-        }
-    },
-
-    removeTag: function () {
-
     }
 };

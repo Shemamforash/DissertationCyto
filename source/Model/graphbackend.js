@@ -79,37 +79,31 @@ var e, n, t, Graph = {
         },
         //Returns false if a tag with the given name already exists
         //Tags are pairs of a name and an element corresponding to the element in the graph sidebar
-        add: function (element, tag_name) {
-            if (t.exists(tag_name)) {
-                return false;
+        update: function (element_id, tag_name) {
+            if(t.exists(tag_name)){
+                if(tag_name === element_id){
+                    return true;
+                } else {
+                    return false;
+                }
+            } else {
+                if(tag_name !== ""){
+                    t.tag_list.push(tag_name);
+                }
+                t.tag_list.splice(t.tag_list.indexOf(element_id), 1);
+                return true;
             }
-            $(element).attr('id', tag_name);
-            t.tag_list.push(tag_name);
-            return true;
         },
         //Returns false if no tag found
         //Otherwise removes the tag and returns true
-        remove: function (element, tag_name) {
+        remove: function (tag_name) {
             var tag = t.exists(tag_name);
             if (tag) {
-                t.tag_list.remove(tag);
+                t.tag_list.splice(t.tag_list.indexOf(tag), 1);
                 return true;
             }
             return false;
         },
-        //Takes the old name of a tag and replaces it with a new one
-        //Returns true if the tag exists, otherwise false
-        update: function (old_name, new_name) {
-            var tag = t.exists(old_name);
-            if (tag) {
-                tag.tag_name = new_name;
-                return true;
-            }
-            return false;
-        },
-        is_bound: function (tag_name, element) {
-            return $(element).attr("id") === tag_name;
-        }
     },
 
     getAsJSON: function () {
