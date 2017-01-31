@@ -3,7 +3,7 @@
  */
 var cy;
 
-window.onload = function () {
+function load_cytoscape() {
     cy = cytoscape({
         container: document.getElementById('cy_div'),
         layout: {name: 'circle'},
@@ -31,14 +31,14 @@ window.onload = function () {
     //end click
     cy.on('tapend', function (event) {
         if (currentNode.get()) {
-            graph.update_node_position(currentNode.get());
+            Graph.nodes.update_position(currentNode.get());
         }
         if(event.cyTarget !== currentNode.get()){
-            toggleNodeSidebar(false);
+            Behaviour.toggleNodeSidebar(false);
         } else {
             cy.nodes().deselect();
             event.cyTarget.select();
-            toggleNodeSidebar(true);
+            Behaviour.toggleNodeSidebar(true);
         }
     });
 
@@ -47,8 +47,8 @@ window.onload = function () {
         var target = event.cyTarget;
         if (currentNode.get()) {
             if (target !== currentNode.get()) {
-                toggleNodeSidebar(true);
-                if (graph.add_edge(currentNode.get().id(), target.id())) {
+                Behaviour.toggleNodeSidebar(true);
+                if (Graph.edges.add(currentNode.get().id(), target.id())) {
                     cy.add({
                         group: "edges",
                         data: {
@@ -84,9 +84,9 @@ function addNode(event) {
     var new_node = cy.add({
         group: "nodes",
         data: {label: "new node"},
-        position: {x: snap_position.x, y: snap_position.y},
+        position: {x: snap_position.x, y: snap_position.y}
     });
-    if (!graph.add_node(new_node.id(), new_node.position().x, new_node.position().y)) {
+    if (!Graph.nodes.add(new_node.id(), new_node.position().x, new_node.position().y)) {
         cy.remove(new_node);
     }
 }
