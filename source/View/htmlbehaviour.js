@@ -29,8 +29,14 @@ var eles, a, Behaviour = {
         });
         $('.ui.dropdown').dropdown();
         $('.ui.modal').modal("setting", {
-            onVisible: RuleEditor.onresize
+            onVisible: RuleEditor.onresize,
+            onHidden: function () {
+                var code = Blockly.JavaScript.workspaceToCode(workspace);
+                var myInterpreter = new Interpreter(code);
+                myInterpreter.run();
+            }
         });
+        $('.ui.modal').modal({closable: false}).modal('hide');
         $('.ui.sidebar').sidebar({
             transition: 'overlay',
             dimPage: false,
@@ -45,7 +51,7 @@ var eles, a, Behaviour = {
         });
         eles.add_tag.click(Behaviour.addTag);
         eles.edit_node_name.click(Behaviour.editNodeName);
-        eles.rules_editor_opener.click(function(){
+        eles.rules_editor_opener.click(function () {
             $(eles.rules_editor).modal('show');
         });
     },
@@ -91,7 +97,7 @@ var eles, a, Behaviour = {
 
         var tag_name = $(element).find('input').val();
         var old_name = $(element).attr("id");
-        if(Graph.tags.update($(element).attr("id"), tag_name)){
+        if (Graph.tags.update($(element).attr("id"), tag_name)) {
             $(element).attr("id", tag_name);
         } else {
             $(element).find('input').val(old_name);
@@ -100,8 +106,8 @@ var eles, a, Behaviour = {
 
     delete_tag: function (element) {
         var tag_name = $(element).attr("id");
-        if(tag_name !== ""){
-            if(!Graph.tags.remove(tag_name)){
+        if (tag_name !== "") {
+            if (!Graph.tags.remove(tag_name)) {
                 console.log("Tag did not exist for some reason..." + tag_name);
             } else {
                 $(element).remove();

@@ -34,3 +34,25 @@ var workspace, RuleEditor = {
         Blockly.svgResize(workspace);
     }
 };
+
+Blockly.Blocks['toggle_bool'] = {
+    init: function() {
+        this.appendValueInput("toggle")
+            .setCheck("Boolean")
+            .appendField("toggle");
+        this.setInputsInline(true);
+        this.setColour(230);
+        this.setTooltip('');
+        this.setHelpUrl('');
+    }
+}
+
+Blockly.JavaScript['toggle_bool'] = function(block) {
+    var value_toggle = Blockly.JavaScript.valueToCode(block, 'toggle', Blockly.JavaScript.ORDER_ATOMIC);
+    try{
+        console.log(eval(value_toggle));
+    } catch(e) {
+
+    }
+    return !value_toggle;
+};

@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="semantic/dist/semantic.min.css">
 
     <!--external js-->
+    <script src="libraries/acorn_interpreter.js"></script>
     <script src="http://code.jquery.com/jquery-2.0.3.min.js"></script>
     <script src="libraries/cytoscape.min.js"></script>
     <script src="libraries/cytoscape-snap-to-grid.js"></script>
@@ -66,7 +67,21 @@
 </div>
 
 <!--modal window to add/edit rule, uses blockly-->
-    <!--<div class="ui header green center aligned">Rules</div>-->
+<div class="ui modal" id="rules_modal">
+    <div class="ui secondary menu" style="height:50px; margin: 0px;">
+        <h1 class="ui item header green fluid">Edit Rule</h1>
+        <div class="ui right item">
+            <button class="ui item button icon inverted red right attached" id="cancel_rule_button" style="width:100px;">
+                Cancel
+                <i class="icon remove"></i>
+            </button>
+            <button class="ui item button icon inverted green left attached" id="accept_rule_button" style="width:100px;">
+                Done
+                <i class="icon checkmark"></i>
+            </button>
+        </div>
+    </div>
+
     <div id="blockly_area">
         <div id="blockly_div"></div>
     </div>
@@ -79,6 +94,7 @@
         <block type="math_arithmetic"></block>
         <block type="text"></block>
         <block type="text_print"></block>
+        <block type="toggle_bool"></block>
     </xml>
 </div>
 

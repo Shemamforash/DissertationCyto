@@ -1,0 +1,9 @@
+internal variables- bool, number, percent
+    increment value
+    decrement value
+sink
+source
+
+if-statement
+conditionals
+toggle-bool
