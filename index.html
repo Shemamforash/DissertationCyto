@@ -5,22 +5,26 @@
     <title>Economy Simulator</title>
 
     <!--css-->
-    <!--<link rel="stylesheet" href="stylesheets/cytostyle.css">-->
     <link rel="stylesheet" href="stylesheets/sassycyto.css">
-    <!--<link rel="stylesheet" href="stylesheets/tempforsemantic.css">-->
     <link rel="stylesheet" href="semantic/dist/semantic.min.css">
 
     <!--external js-->
     <script src="http://code.jquery.com/jquery-2.0.3.min.js"></script>
     <script src="libraries/cytoscape.min.js"></script>
     <script src="libraries/cytoscape-snap-to-grid.js"></script>
+    <script src="libraries/blockly_compressed.js"></script>
+    <script src="node_modules/blockly/blocks_compressed.js"></script>
+    <script src="node_modules/blockly/msg/js/en-gb.js"></script>
+    <script src="libraries/javascript_compressed.js"></script>
     <script src="semantic/dist/semantic.min.js"></script>
 
     <!--internal js-->
+    <script src="source/Model/blocklyinterpreter.js"></script>
     <script src="source/Model/graphbackend.js"></script>
     <script src="source/View/graphvisualisation.js"></script>
     <script src="source/View/htmlbehaviour.js"></script>
     <script src="source/Controller/controller.js"></script>
+
 </head>
 <body class="full_screen" onmouseup="clampViewPort()">
 
@@ -54,9 +58,29 @@
                 </div>
             </div>
         </div>
+        <div class="ui button inverted white icon fluid" id="add_rule">
+            Rules
+            <i class="icon plus"></i>
+        </div>
     </div>
 </div>
 
+<!--modal window to add/edit rule, uses blockly-->
+    <!--<div class="ui header green center aligned">Rules</div>-->
+    <div id="blockly_area">
+        <div id="blockly_div"></div>
+    </div>
+
+    <xml id="toolbox" style="display: none">
+        <block type="controls_if"></block>
+        <block type="controls_repeat_ext"></block>
+        <block type="logic_compare"></block>
+        <block type="math_number"></block>
+        <block type="math_arithmetic"></block>
+        <block type="text"></block>
+        <block type="text_print"></block>
+    </xml>
+</div>
 
 <!--cytoscape-->
 <div id="main_container" class="full_screen pusher">

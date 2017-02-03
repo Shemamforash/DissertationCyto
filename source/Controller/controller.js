@@ -27,4 +27,5 @@ $(document).ready(function(){
     load_cytoscape();
     Behaviour.init();
     Graph.init();
+    RuleEditor.init();
 });

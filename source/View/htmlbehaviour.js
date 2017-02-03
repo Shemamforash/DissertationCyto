@@ -10,7 +10,9 @@ var eles, a, Behaviour = {
             edit_tag: $('#edit_tags_button'),
             edit_node_name: $('#edit_node_name'),
             sidebar_opener: $('#sidebar_opener'),
-            tag_editor: $('#tag_editor')
+            tag_editor: $('#tag_editor'),
+            rules_editor: $('#rules_modal'),
+            rules_editor_opener: $('#add_rule')
         }
     },
     attributes: {
@@ -26,6 +28,9 @@ var eles, a, Behaviour = {
             exclusive: false
         });
         $('.ui.dropdown').dropdown();
+        $('.ui.modal').modal("setting", {
+            onVisible: RuleEditor.onresize
+        });
         $('.ui.sidebar').sidebar({
             transition: 'overlay',
             dimPage: false,
@@ -40,6 +45,9 @@ var eles, a, Behaviour = {
         });
         eles.add_tag.click(Behaviour.addTag);
         eles.edit_node_name.click(Behaviour.editNodeName);
+        eles.rules_editor_opener.click(function(){
+            $(eles.rules_editor).modal('show');
+        });
     },
 
     addTag: function () {
