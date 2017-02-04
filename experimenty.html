@@ -15,48 +15,18 @@
     <script src="semantic/dist/semantic.min.js"></script>
 </head>
 <body style="height:100%;width:100%;">
-<div class="ui modal active" style="width:1000px;height:800px;">
-    <!--<div class="ui header green center aligned">Rules</div>-->
-    <div id="blockly_area" style="height:100%; width:100%">
-        <div id="blockly_div" style="position: absolute"></div>
+<h2>Success Form</h2>
+<div class="ui form">
+    <div class="field">
+        <label>Password</label>
+        <input />
     </div>
-
-    <xml id="toolbox" style="display: none">
-        <block type="controls_if"></block>
-        <block type="controls_repeat_ext"></block>
-        <block type="logic_compare"></block>
-        <block type="math_number"></block>
-        <block type="math_arithmetic"></block>
-        <block type="text"></block>
-        <block type="text_print"></block>
-    </xml>
-
-    <script>
-        var blocklyArea = document.getElementById('blockly_area');
-        var blocklyDiv = document.getElementById('blockly_div');
-        var workspace = Blockly.inject(blocklyDiv,
-            {toolbox: document.getElementById('toolbox')});
-        var onresize = function(e) {
-            // Compute the absolute coordinates and dimensions of blocklyArea.
-            var element = blocklyArea;
-            var x = 0;
-            var y = 0;
-//            do {
-                x += element.offsetLeft;
-                y += element.offsetTop;
-                element = element.offsetParent;
-//            } while (element);
-            // Position blocklyDiv over blocklyArea.
-            blocklyDiv.style.left = x + 'px';
-            blocklyDiv.style.top = y + 'px';
-            blocklyDiv.style.width = blocklyArea.offsetWidth + 'px';
-            blocklyDiv.style.height = blocklyArea.offsetHeight + 'px';
-            Blockly.svgResize(workspace);
-        };
-        window.addEventListener('resize', onresize, false);
-        onresize();
-        Blockly.svgResize(workspace);
-    </script>
+    <div class="ui success message">
+        Good Password!
+    </div>
+    <div class="ui error message">
+        Bad Password!
+    </div>
 </div>
 </body>
 </html>

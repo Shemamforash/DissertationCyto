@@ -28,6 +28,7 @@ var eles, a, Behaviour = {
             exclusive: false
         });
         $('.ui.dropdown').dropdown();
+        $('.ui.modal').modal({closable: false}).modal('hide');
         $('.ui.modal').modal("setting", {
             onVisible: RuleEditor.onresize,
             onHidden: function () {
@@ -36,7 +37,6 @@ var eles, a, Behaviour = {
                 myInterpreter.run();
             }
         });
-        $('.ui.modal').modal({closable: false}).modal('hide');
         $('.ui.sidebar').sidebar({
             transition: 'overlay',
             dimPage: false,
@@ -53,6 +53,12 @@ var eles, a, Behaviour = {
         eles.edit_node_name.click(Behaviour.editNodeName);
         eles.rules_editor_opener.click(function () {
             $(eles.rules_editor).modal('show');
+        });
+        $('#cancel_rule_button').click(function(){
+            $('.ui.modal').modal('hide');
+        });
+        $('#accept_rule_button').click(function(){
+            $('.ui.modal').modal('hide');
         });
     },
 

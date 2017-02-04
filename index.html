@@ -68,17 +68,21 @@
 
 <!--modal window to add/edit rule, uses blockly-->
 <div class="ui modal" id="rules_modal">
-    <div class="ui secondary menu" style="height:50px; margin: 0px;">
-        <h1 class="ui item header green fluid">Edit Rule</h1>
-        <div class="ui right item">
-            <button class="ui item button icon inverted red right attached" id="cancel_rule_button" style="width:100px;">
-                Cancel
-                <i class="icon remove"></i>
-            </button>
-            <button class="ui item button icon inverted green left attached" id="accept_rule_button" style="width:100px;">
-                Done
-                <i class="icon checkmark"></i>
-            </button>
+    <div class="ui grid" style="height: 50px; margin: 0px; padding: 0px;">
+        <div class="ten wide column">
+            <div class="ui header green center aligned">Edit Rule</div>
+        </div>
+        <div class="six wide column middle aligned">
+            <div class="ui buttons two column grid fluid">
+                <button class="ui button inverted red icon" id="cancel_rule_button">
+                    Cancel
+                    <i class="icon remove"></i>
+                </button>
+                <button class="ui button inverted green icon" id="accept_rule_button">
+                    Done
+                    <i class="icon checkmark"></i>
+                </button>
+            </div>
         </div>
     </div>
 
