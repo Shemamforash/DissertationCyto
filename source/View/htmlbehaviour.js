@@ -30,12 +30,7 @@ var eles, a, Behaviour = {
         $('.ui.dropdown').dropdown();
         $('.ui.modal').modal({closable: false}).modal('hide');
         $('.ui.modal').modal("setting", {
-            onVisible: RuleEditor.onresize,
-            onHidden: function () {
-                var code = Blockly.JavaScript.workspaceToCode(workspace);
-                var myInterpreter = new Interpreter(code);
-                myInterpreter.run();
-            }
+            onVisible: RuleEditor.onresize
         });
         $('.ui.sidebar').sidebar({
             transition: 'overlay',
@@ -55,11 +50,23 @@ var eles, a, Behaviour = {
             $(eles.rules_editor).modal('show');
         });
         $('#cancel_rule_button').click(function(){
-            $('.ui.modal').modal('hide');
+            Behaviour.discard_rule();
         });
         $('#accept_rule_button').click(function(){
-            $('.ui.modal').modal('hide');
+            Behaviour.accept_rule();
         });
+    },
+
+    accept_rule: function(){
+        var code = Blockly.JavaScript.workspaceToCode(workspace);
+        var blocks = workspace.getAllBlocks();
+        Graph.nodes.create_rule();
+        workspace.clear();
+    },
+
+    discard_rule: function(){
+        workspace.clear();
+        $('.ui.modal').modal('hide');
     },
 
     addTag: function () {
@@ -148,6 +155,6 @@ var eles, a, Behaviour = {
     },
 
     changeNodeLabel: function (text) {
-        currentNode.get().data('label', text);
+        CyA.current_node.data('label', text);
     }
 };

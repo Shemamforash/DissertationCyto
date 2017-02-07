@@ -36,6 +36,13 @@ var e, n, t, Graph = {
                 rules: []
             };
         },
+        create_rule: function(code, blocks){
+            var currentNode = CyA.current_node;
+            return {
+                code: code,
+                blocks: blocks
+            }
+        },
         node_overlaps: function (x, y, id) {
             for (var node in n.node_list) {
                 node = n.node_list[node];

@@ -27,7 +27,7 @@
     <script src="source/Controller/controller.js"></script>
 
 </head>
-<body class="full_screen" onmouseup="clampViewPort()">
+<body class="full_screen" onmouseup="CytoGraph.clamp_viewport()">
 
 <!--sidebar to control graph attributes-->
 <div id="graph_sidebar" class="ui left inverted sidebar vertical menu">
@@ -70,7 +70,13 @@
 <div class="ui modal" id="rules_modal">
     <div class="ui grid" style="height: 50px; margin: 0px; padding: 0px;">
         <div class="ten wide column">
-            <div class="ui header green center aligned">Edit Rule</div>
+            <!--<div class="ui header green center aligned">Edit Rule</div>-->
+            <div class="ui disabled input inverted center aligned green header nine wide">
+                <input class="ui title green h1 nine wide" style="height: 30px" type="text" placeholder="Name" oninput="Behaviour.changeRuleName(this.value)">
+                <div class="ui icon button inverted right attached one wide" id="edit_rule_name">
+                    <i class="edit icon button"></i>
+                </div>
+            </div>
         </div>
         <div class="six wide column middle aligned">
             <div class="ui buttons two column grid fluid">
@@ -104,7 +110,7 @@
 
 <!--cytoscape-->
 <div id="main_container" class="full_screen pusher">
-    <div id="cy_div" class="full_screen" ondblclick="addNode(event)"></div>
+    <div id="cy_div" class="full_screen" ondblclick="CytoGraph.add_node(event)"></div>
     <button class="ui button attached fluid green" id="sidebar_opener" onclick="Behaviour.toggleGraphSidebar()"></button>
 </div>
 

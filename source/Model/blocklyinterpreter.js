@@ -45,7 +45,7 @@ Blockly.Blocks['toggle_bool'] = {
         this.setTooltip('');
         this.setHelpUrl('');
     }
-}
+};
 
 Blockly.JavaScript['toggle_bool'] = function(block) {
     var value_toggle = Blockly.JavaScript.valueToCode(block, 'toggle', Blockly.JavaScript.ORDER_ATOMIC);
