@@ -47,27 +47,64 @@ var eles, a, Behaviour = {
         eles.add_tag.click(Behaviour.addTag);
         eles.edit_node_name.click(Behaviour.editNodeName);
         eles.rules_editor_opener.click(function () {
+            $('#rule_name_input').val("");
             $(eles.rules_editor).modal('show');
+
         });
-        $('#cancel_rule_button').click(function(){
-            Behaviour.discard_rule();
+        $('#cancel_rule_button').click(function () {
+            Behaviour.rule_editor.discard_rule();
         });
-        $('#accept_rule_button').click(function(){
-            Behaviour.accept_rule();
+        $('#accept_rule_button').click(function () {
+            Behaviour.rule_editor.accept_rule();
         });
     },
 
-    accept_rule: function(){
-        var code = Blockly.JavaScript.workspaceToCode(workspace);
-        var blocks = workspace.getAllBlocks();
-        Graph.nodes.create_rule();
-        workspace.clear();
+    rule_editor: {
+        current_rule: null,
+        accept_rule: function () {
+            if ($('.ui.dimmer.modals').first().hasClass("active") && !$('.ui.dimmer.modals').first().hasClass("animating")) {
+                var code = Blockly.JavaScript.workspaceToCode(workspace);
+                var blocks = Blockly.Xml.workspaceToDom(workspace);
+                var xml_string = Blockly.Xml.domToText(blocks);
+                var rule_name = $('#rule_name_input').val();
+                var rule_button = $('<button class="ui button red rule fluid"></button>');
+                var new_rule = {};
+
+                if (Behaviour.rule_editor.current_rule === null) {
+                    new_rule = Graph.nodes.create_rule(rule_name, code, xml_string);
+                    rule_button.text(new_rule.id);
+                    $('#add_rule').before(rule_button);
+                    rule_button.bind('click', new_rule, Behaviour.rule_editor.edit_rule);
+                } else {
+                    Graph.nodes.edit_rule(rule_name, code, xml_string);
+                }
+
+                Behaviour.rule_editor.current_rule = null;
+                $('.ui.modal').modal('hide');
+                workspace.clear();
+            }
+        },
+
+        edit_rule: function (event) {
+            var rule = event.data;
+            var xml = Blockly.Xml.textToDom(rule.blocks);
+            $('#rule_name_input').val(rule.id);
+            Blockly.Xml.domToWorkspace(xml, workspace);
+            $(eles.rules_editor).modal('show');
+            Behaviour.rule_editor.current_rule = rule;
+        },
+
+        discard_rule: function () {
+            workspace.clear();
+            Behaviour.rule_editor.current_rule = null;
+            $('.ui.modal').modal('hide');
+        },
+
+        delete_rule: function () {
+            Graph.nodes.delete_rule(1);
+        },
     },
 
-    discard_rule: function(){
-        workspace.clear();
-        $('.ui.modal').modal('hide');
-    },
 
     addTag: function () {
         var element = $('<div class="ui input inverted transparent tag_edit right labelled">' +
@@ -149,7 +186,6 @@ var eles, a, Behaviour = {
                 eles.node_sidebar.sidebar('show');
             }
         } else {
-            console.log(eles);
             eles.node_sidebar.sidebar('hide');
         }
     },

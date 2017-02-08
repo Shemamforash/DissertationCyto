@@ -36,11 +36,51 @@ var e, n, t, Graph = {
                 rules: []
             };
         },
-        create_rule: function(code, blocks){
-            var currentNode = CyA.current_node;
-            return {
-                code: code,
-                blocks: blocks
+        create_rule: function (rule_id, code, xml_blocks) {
+            var graph_node = n.node_list[CyA.current_node.id()];
+            var current_rule = null;
+            if (graph_node) {
+                if (rule_id !== "") {
+                    for (var i = 0; i < graph_node.rules.length; ++i) {
+                        current_rule = graph_node.rules[i];
+                        if (current_rule.id === rule_id) {
+                            current_rule.code = code;
+                            current_rule.blocks = xml_blocks;
+                        }
+                    }
+                } else {
+                    rule_id = 'Rule ' + graph_node.rules.length;
+                    current_rule = {
+                        id: rule_id,
+                        code: code,
+                        blocks: xml_blocks
+                    };
+                    graph_node.rules.push(current_rule);
+                }
+            }
+            return current_rule;
+        },
+        edit_rule: function(rule_id, code, xml_blocks){
+            var graph_node = n.node_list[CyA.current_node.id()];
+            if (graph_node) {
+                for(var i = 0; i < graph_node.rules.length; ++i){
+                    var current_rule = graph_node.rules[i];
+                    if(current_rule.id === rule_id){
+                        current_rule.code = code;
+                        current_rule.blocks = xml_blocks;
+                    }
+                }
+            }
+        },
+        delete_rule: function(rule_id){
+            var graph_node = n.node_list[CyA.current_node];
+            if (graph_node) {
+                for(var i = 0; i < graph_node.rules.length; ++i){
+                    var current_rule = graph_node.rules[i];
+                    if(current_rule.id === rule_id){
+                        graph_node.rules.splice(i, 1);
+                    }
+                }
             }
         },
         node_overlaps: function (x, y, id) {
@@ -87,14 +127,14 @@ var e, n, t, Graph = {
         //Returns false if a tag with the given name already exists
         //Tags are pairs of a name and an element corresponding to the element in the graph sidebar
         update: function (element_id, tag_name) {
-            if(t.exists(tag_name)){
-                if(tag_name === element_id){
+            if (t.exists(tag_name)) {
+                if (tag_name === element_id) {
                     return true;
                 } else {
                     return false;
                 }
             } else {
-                if(tag_name !== ""){
+                if (tag_name !== "") {
                     t.tag_list.push(tag_name);
                 }
                 t.tag_list.splice(t.tag_list.indexOf(element_id), 1);
