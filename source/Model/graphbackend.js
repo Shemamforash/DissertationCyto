@@ -40,44 +40,41 @@ var e, n, t, Graph = {
             var graph_node = n.node_list[CyA.current_node.id()];
             var current_rule = null;
             if (graph_node) {
-                if (rule_id !== "") {
-                    for (var i = 0; i < graph_node.rules.length; ++i) {
-                        current_rule = graph_node.rules[i];
-                        if (current_rule.id === rule_id) {
-                            current_rule.code = code;
-                            current_rule.blocks = xml_blocks;
-                        }
-                    }
-                } else {
+                if (rule_id === "") {
                     rule_id = 'Rule ' + graph_node.rules.length;
-                    current_rule = {
-                        id: rule_id,
-                        code: code,
-                        blocks: xml_blocks
-                    };
-                    graph_node.rules.push(current_rule);
+
                 }
+                current_rule = {
+                    id: rule_id,
+                    code: code,
+                    blocks: xml_blocks
+                };
+                graph_node.rules.push(current_rule);
             }
             return current_rule;
         },
-        edit_rule: function(rule_id, code, xml_blocks){
+        change_rule_name: function (rule, new_id) {
+            //TODO Check id is unique
+            rule.id = new_id;
+        },
+        edit_rule: function (rule_id, code, xml_blocks) {
             var graph_node = n.node_list[CyA.current_node.id()];
             if (graph_node) {
-                for(var i = 0; i < graph_node.rules.length; ++i){
+                for (var i = 0; i < graph_node.rules.length; ++i) {
                     var current_rule = graph_node.rules[i];
-                    if(current_rule.id === rule_id){
+                    if (current_rule.id === rule_id) {
                         current_rule.code = code;
                         current_rule.blocks = xml_blocks;
                     }
                 }
             }
         },
-        delete_rule: function(rule_id){
+        delete_rule: function (rule_id) {
             var graph_node = n.node_list[CyA.current_node];
             if (graph_node) {
-                for(var i = 0; i < graph_node.rules.length; ++i){
+                for (var i = 0; i < graph_node.rules.length; ++i) {
                     var current_rule = graph_node.rules[i];
-                    if(current_rule.id === rule_id){
+                    if (current_rule.id === rule_id) {
                         graph_node.rules.splice(i, 1);
                     }
                 }
@@ -157,6 +154,23 @@ var e, n, t, Graph = {
         return {
             nodes: nodes,
             edges: edges
+        }
+    },
+    evaluator: {
+        internal_rules: [],
+        source_rules: [],
+        sink_rules: [],
+        evaluate: function () {
+            var i;
+            for(i = 0; i < Graph.evaluator.internal_rules.length; ++i){
+                Graph.evaluator.internal_rules[i].run();
+            }
+            for(i = 0; i < Graph.evaluator.source_rules.length; ++i){
+                Graph.evaluator.source_rules[i].run();
+            }
+            for(i = 0; i < Graph.evaluator.sink_rules.length; ++i){
+                Graph.evaluator.sink_rules[i].run();
+            }
         }
     }
 };

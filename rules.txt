@@ -7,3 +7,19 @@ source
 if-statement
 conditionals
 toggle-bool
+
+INTERNAL type name valuetype (lowerbound valuetype) (upperbound valuetype) (reset valuetype)
+INTERNAL name equals valuetype arith valuetype | if conditionals | operator value
+
+arith = arith operator arith | valuetype
+name = INTERNAL
+operator = + | - | * | /
+
+valuetype = value | name | tag -> types can be bool or num
+
+conditionals = conditionals conditionoperator conditionals | valuetype
+conditionoperator = == | != | < | > | <= | >=
+
+SOURCE | SINK (if conditionals) tag quantity
+if conditionals -> if conditionals
+quantity -> if conditionals | + - * /

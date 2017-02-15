@@ -103,6 +103,11 @@ var eles, a, Behaviour = {
         delete_rule: function () {
             Graph.nodes.delete_rule(1);
         },
+        change_rule_name: function(new_name){
+            if(Behaviour.rule_editor.current_rule !== null){
+                Graph.nodes.change_rule_name(Behaviour.rule_editor.current_rule, new_name);
+            }
+        }
     },
 
 
