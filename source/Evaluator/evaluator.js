@@ -15,7 +15,7 @@ var consoleElements, Evaluator = {
     },
     init: function () {
         consoleElements = Evaluator.elements;
-        Evaluator.tokenizer("4 + 8 / 2 * 3");
+        Evaluator.tokenizer("2 ^ ( 4 + 8 ) / 2 * 3");
     },
     bind: function () {
 
@@ -296,6 +296,46 @@ var consoleElements, Evaluator = {
             ast.push(expression(0));
         }
         console.log(ast);
+        Evaluator.evaluate(ast);
+    },
+    evaluate: function (ast) {
+        var operators = {
+            "+": function (a, b) {
+                return a + b;
+            },
+            "-": function (a, b) {
+                return a - b;
+            },
+            "*": function (a, b) {
+                return a * b;
+            },
+            "/": function (a, b) {
+                return a / b;
+            },
+            "^": function (a, b) {
+                return Math.pow(a, b);
+            },
+            "%": function (a, b) {
+                return a % b;
+            }
+        };
+
+        var parse_node = function (node) {
+            if(node.type === "number"){
+                return node.value;
+            } else if(operators[node.type]){
+                if(node.left){
+                    return operators[node.type](parse_node(node.left), parse_node(node.right));
+                }
+                return operators[node.type](parse_node(node.right));
+            }
+        };
+        for (var i = 0; i < ast.length; ++i) {
+            var evaluated_node = parse_node(ast[i]);
+            if (evaluated_node !== undefined) {
+                console.log(evaluated_node);
+            }
+        }
     }
 };
 
