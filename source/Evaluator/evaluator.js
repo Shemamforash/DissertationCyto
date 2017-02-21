@@ -15,7 +15,7 @@ var consoleElements, Evaluator = {
     },
     init: function () {
         consoleElements = Evaluator.elements;
-        Evaluator.tokenizer("   hello  sam\n i am saaaaam true false700 5000 a60s 23 q if else INTERNAL * / > = - == 27.23747 1.1.1");
+        Evaluator.tokenizer("4 + 8 / 2 * 3");
     },
     bind: function () {
 
@@ -128,8 +128,9 @@ var consoleElements, Evaluator = {
 
     //https://www.codeproject.com/Articles/345888/How-to-write-a-simple-interpreter-in-JavaScript
     tokenizer: function (input) {
-        var tokens = [], current_char = "", prev_char_is_whitespace = false, input_iterator = 0;
+        var tokens = [], current_char = " ", prev_char = " ", input_iterator = 0;
         var next_char = function () {
+            prev_char = current_char;
             current_char = input[input_iterator];
             ++input_iterator;
         };
@@ -139,10 +140,17 @@ var consoleElements, Evaluator = {
                 value: value
             });
         };
+        var peek = function () {
+            return input[input_iterator + 2];
+        };
         var read_number = function () {
             var final_num = "";
             while (Evaluator.is_digit(current_char)) {
                 final_num += current_char;
+                if (Evaluator.is_empty(peek()) || peek() === undefined) {
+                    add_token("number", parseFloat(final_num));
+                    break;
+                }
                 next_char();
                 if (current_char === "." && final_num.indexOf(".") === -1) {
                     final_num += current_char;
@@ -150,9 +158,6 @@ var consoleElements, Evaluator = {
                 } else {
                     console.log("Number badly formatted");
                 }
-            }
-            if (Evaluator.is_empty(current_char)) {
-                add_token("number", parseFloat(final_num));
             }
         };
         var read_identifier = function () {
@@ -173,24 +178,17 @@ var consoleElements, Evaluator = {
         while (input_iterator < input.length) {
             next_char();
             if (Evaluator.is_empty(current_char)) {
-                prev_char_is_whitespace = true;
-            } else if (Evaluator.is_operator(current_char) && prev_char_is_whitespace) {
+                //do nothing
+            } else if (Evaluator.is_operator(current_char) && prev_char === " ") {
                 add_token(current_char);
-                prev_char_is_whitespace = false;
-            } else if (Evaluator.is_digit(current_char) && prev_char_is_whitespace) {
+            } else if (Evaluator.is_digit(current_char) && prev_char === " ") {
                 read_number();
-                prev_char_is_whitespace = false;
-            } else if (Evaluator.is_identifier(current_char) && prev_char_is_whitespace) {
+            } else if (Evaluator.is_identifier(current_char) && prev_char === " ") {
                 read_identifier();
-                prev_char_is_whitespace = false;
             }
         }
         add_token("end", null);
-
-        for (var i = 0; i < tokens.length; ++i) {
-            console.log(tokens[i]);
-        }
-       Evaluator.parser(tokens);
+        Evaluator.parser(tokens);
     },
 
 
@@ -208,47 +206,46 @@ var consoleElements, Evaluator = {
     },
 
     parser: function (tokens) {
-        var ast = [], current_token = tokens[0], token_iterator = 0, symbols = {};
+        var ast = [], current_token = tokens[0], token_iterator = 1, symbols = {};
         var read_token = function () {
             current_token = tokens[token_iterator];
             ++token_iterator;
         };
-        var add_operator = function (id, null_function, left_binding_power, left_associative_function) {
+        var symbol = function (id, null_function, left_binding_power, left_associative_function) {
             var new_symbol = symbols[id] || {};
             symbols[id] = {
                 left_binding_power: new_symbol.left_binding_power || left_binding_power,
                 null_function: new_symbol.null_function || null_function,
                 left_associative_function: new_symbol.left_associative_function || left_associative_function
             };
+            return symbols[id];
         };
-        var symbol = function (token) {
-            var symbol = symbols[token.type];
-            if (symbol) {
-                return {
-                    left_binding_power: symbol.left_binding_power,
-                    null_function: symbol.null_function,
-                    left_associative_function: symbol.left_associative_function,
-                    type: token.type,
-                    value: token.value
-                }
-            } else {
-                return {
-                    type: token.type,
-                    value: token.value
-                };
+        var interpret_token = function (token) {
+            var sym = {};
+            if (symbols[token.type]) {
+                console.log(token.type);
+                sym.left_binding_power = symbols[token.type].left_binding_power;
+                sym.null_function = symbols[token.type].null_function;
+                sym.left_associative_function = symbols[token.type].left_associative_function;
             }
+            sym.type = token.type;
+            sym.value = token.value;
+            return sym;
         };
-        var expression = function(right_binding_power){
-            var left, t = symbol(current_token);
+        var expression = function (right_binding_power) {
+            var left, t = interpret_token(current_token);
             read_token();
-            if(!t.null_function) {
-                console.log("unexpected token" + t);
+            if (!t.null_function) {
+                console.log("unexpected token");
+                console.log(t);
+                console.log(current_token);
+                console.log(symbols);
             }
             left = t.null_function(t);
-            while(right_binding_power < symbol(current_token).left_binding_power){
-                t = symbol(current_token);
+            while (right_binding_power < interpret_token(current_token).left_binding_power) {
+                t = interpret_token(current_token);
                 read_token();
-                if(!t.left_associative_function) {
+                if (!t.left_associative_function) {
                     console.log("unexpected token" + t);
                 }
                 left = t.left_associative_function(left);
@@ -258,17 +255,17 @@ var consoleElements, Evaluator = {
         var infix_creator = function (id, left_binding_power, right_binding_power, left_associative_function) {
             right_binding_power = right_binding_power || left_binding_power;
             left_associative_function = left_associative_function || function (left) {
-                return {
-                    type: id,
-                    left: left,
-                    right: expression(right_binding_power)
+                    return {
+                        type: id,
+                        left: left,
+                        right: expression(right_binding_power)
+                    };
                 };
-            };
-            add_operator(id, null, left_binding_power, left_associative_function);
+            symbol(id, null, left_binding_power, left_associative_function);
 
         };
         var prefix_creator = function (id, right_binding_power) {
-            add_operator(id, function () {
+            symbol(id, function () {
                 return {
                     type: id,
                     right: expression(right_binding_power)
@@ -282,20 +279,20 @@ var consoleElements, Evaluator = {
         infix_creator("%", 4);
         infix_creator("+", 3);
         infix_creator("-", 3);
-        add_operator(")");
-        add_operator("end");
-        add_operator("(", function(){
+        symbol(")");
+        symbol("end");
+        symbol("(", function () {
             var value = expression(2);
-            if(symbol(current_token) !== ")") {
+            if (symbol(current_token) !== ")") {
                 console.log("no closing parenthesis");
             }
             read_token();
             return value;
         });
-        symbol("number", function(number){
+        symbol("number", function (number) {
             return number;
         });
-        while(symbol(current_token).type !== "end"){
+        while (interpret_token(current_token).type !== "end") {
             ast.push(expression(0));
         }
         console.log(ast);
