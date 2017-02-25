@@ -8,8 +8,15 @@ if-statement
 conditionals
 toggle-bool
 
-INTERNAL type name valuetype (lowerbound valuetype) (upperbound valuetype) (reset valuetype)
-INTERNAL name equals valuetype arith valuetype | if conditionals | operator value
+e.g. INTERNAL (name- string) = (value- bool or num), min (if num) = value, max (if num) = value, reset = value // for declaration
+e.g. INTERNAL name moperator =
+//string implies variable, so needs to be looked up to check if it exists
+
+
+mathexpr = mathexpr operator mathexpr | value | variable -> check if it evaluates to a number, if not it's invalid
+
+INTERNAL type name valuetype (lowerbound valuetype) (upperbound valuetype) (reset valuetype) //declaration + assignment
+INTERNAL name equals valuetype arith valuetype | if conditionals | operator value            //assignment
 
 arith = arith operator arith | valuetype
 name = INTERNAL
@@ -23,3 +30,34 @@ conditionoperator = == | != | < | > | <= | >=
 SOURCE | SINK (if conditionals) tag quantity
 if conditionals -> if conditionals
 quantity -> if conditionals | + - * /
+
+{
+    type: num
+    name: var_name,
+    value: v,
+    min_value: v_min,
+    max_value: v_max,
+    reset: v_normal_value,
+    step_forward: function(){
+        for(var i = 0; i < rules.length; ++i){
+            rules[i]();
+            fix_to_bounds();
+        }
+        if(reset !== undefined){
+            v = v_normal_value;
+        }
+    },
+    rules: {
+        rule_1: {
+            "var_obj.value *= var_obj.value < 2 ? tag_obj.value + 2 : var_obj.value + 1"
+        },
+    },
+    fix_to_bounds: function(){
+        if(min_value !== undefined && v < min_value){
+            v = min_value;
+        }
+        if(max_value !== undefined && v > max_value){
+            v = max_value;
+        }
+    }
+}

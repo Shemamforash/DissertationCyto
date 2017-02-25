@@ -7,7 +7,7 @@
 
 var consoleElements, Evaluator = {
     elements: {
-        keywords: ["if", "(", ")", "else", "INTERNAL", "SOURCE", "SINK", "reset", "lower-bound", "upper-bound"],
+        keywords: ["if", "(", ")", "else", "INTERNAL", "SOURCE", "SINK", "reset", "min", "max"],
         conditional_symbols: ["<", ">", "<=", ">=", "=="],
         operators: ["+", "-", "*", "/", "="],
         input: "",
@@ -15,7 +15,7 @@ var consoleElements, Evaluator = {
     },
     init: function () {
         consoleElements = Evaluator.elements;
-        Evaluator.tokenizer("2 ^ ( 4 + 8 ) / 2 * 3");
+        Evaluator.tokenizer("INTERNAL damage = 5 min = 2 max = 7 reset = 0");
     },
     bind: function () {
 
@@ -127,7 +127,7 @@ var consoleElements, Evaluator = {
     },
 
     //https://www.codeproject.com/Articles/345888/How-to-write-a-simple-interpreter-in-JavaScript
-    tokenizer: function (input) {
+    tokenizer: function (input, economy_node) {
         var tokens = [], current_char = " ", prev_char = " ", input_iterator = 0;
         var next_char = function () {
             prev_char = current_char;
@@ -135,29 +135,42 @@ var consoleElements, Evaluator = {
             ++input_iterator;
         };
         var add_token = function (type, value) {
-            tokens.push({
+            var new_token = {
                 type: type,
-                value: value
-            });
+                value: value !== "" ? value : undefined
+            };
+            tokens.push(new_token);
         };
         var peek = function () {
             return input[input_iterator + 2];
         };
         var read_number = function () {
             var final_num = "";
-            while (Evaluator.is_digit(current_char)) {
-                final_num += current_char;
-                if (Evaluator.is_empty(peek()) || peek() === undefined) {
-                    add_token("number", parseFloat(final_num));
+            var num_valid = true;
+            while (num_valid) {
+                if (Evaluator.is_digit(current_char)) {
+                    final_num += current_char;
+                } else if (current_char === ".") {
+                    if(final_num.indexOf(".") === -1) {
+                        final_num += current_char;
+                        continue;
+                    } else {
+                        num_valid = false;
+                        break;
+                    }
+                } else if (Evaluator.is_empty(peek()) || peek() === undefined || current_char === " ") {
+                    break;
+                } else {
+                    num_valid = false;
                     break;
                 }
                 next_char();
-                if (current_char === "." && final_num.indexOf(".") === -1) {
-                    final_num += current_char;
-                    next_char();
-                } else {
-                    console.log("Number badly formatted");
-                }
+            }
+
+            if(num_valid){
+                add_token("number", parseFloat(final_num));
+            } else {
+                console.log("Number badly formatted: " + final_num + current_char);
             }
         };
         var read_identifier = function () {
@@ -167,7 +180,7 @@ var consoleElements, Evaluator = {
                 next_char();
             }
             if (consoleElements.keywords.indexOf(final_identifier) !== -1) {
-                add_token("keyword", final_identifier);
+                add_token(final_identifier, "");
             } else if (final_identifier === "true" || final_identifier === "false") {
                 add_token("bool", final_identifier === "true");
             }
@@ -187,8 +200,41 @@ var consoleElements, Evaluator = {
                 read_identifier();
             }
         }
+        console.log(tokens, economy_node);
         add_token("end", null);
-        Evaluator.parser(tokens);
+        // var rule_type = tokens.shift().type;
+        // if(rule_type === "INTERNAL") {
+        //     Evaluator.create_internal_rule(tokens);
+        // } else if (rule_type === "SOURCE"){
+        //     Evaluator.create_source_rule(tokens);
+        // } else if (rule_type === "SINK"){
+        //     Evaluator.create_sink_rule(tokens);
+        // } else {
+        //     console.log("not a valid rule format");
+        // }
+        // Evaluator.parser(tokens);
+    },
+
+    create_internal_rule: function(tokens, economy_node){
+        var variable_name = tokens.shift();
+        //check for variable existence;
+        var var_exists = false;
+        if (var_exists) {
+
+        } else {
+            var value = tokens.shift();
+
+            economy_node.internal_rules = [];
+            economy_node.internal_rules.push({
+
+            });
+        }
+    },
+    create_source_rule: function(tokens){
+
+    },
+    create_sink_rule: function(tokens){
+
     },
 
 
