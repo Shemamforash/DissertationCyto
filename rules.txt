@@ -1,36 +1,38 @@
-internal variables- bool, number, percent
-    increment value
-    decrement value
-sink
-source
-
-if-statement
-conditionals
-toggle-bool
-
 e.g. INTERNAL (name- string) = (value- bool or num), min (if num) = value, max (if num) = value, reset = value // for declaration
 e.g. INTERNAL name moperator =
 //string implies variable, so needs to be looked up to check if it exists
 
+all rules must end with a semicolon
+
+use MANUAL keyword to indicate rules that can be manually activated by the user -> how is this implemented?
+    open node and click on rule?
+    click on node and show activatable rules?
+    activate all MANUAL rules on node activation?
+
+
+STATEMENT FORMATS:
 
 mathexpr = mathexpr operator mathexpr | value | variable -> check if it evaluates to a number, if not it's invalid
+ifstmt = IF conditional THEN (mathexpr | ifstmt) ELSE (mathexpr | ifstmt)
+conditional = variable operator variable | bracket conditional operator conditional bracket | true | false | variable
+variable_declaration = INTERNAL type name valuetype (lowerbound valuetype) (upperbound valuetype) (reset valuetype)
+variable_assignment = rulescope name equals valuetype arith valuetype | if conditionals | operator value
 
-INTERNAL type name valuetype (lowerbound valuetype) (upperbound valuetype) (reset valuetype) //declaration + assignment
-INTERNAL name equals valuetype arith valuetype | if conditionals | operator value            //assignment
 
 arith = arith operator arith | valuetype
 name = INTERNAL
-operator = + | - | * | /
-
+operator = + | - | * | / | (unary)-
+assignment_operator = += | *= | /= | -= | ^= | =
+conditionoperator = == | != | < | > | <= | >=
 valuetype = value | name | tag -> types can be bool or num
 
-conditionals = conditionals conditionoperator conditionals | valuetype
-conditionoperator = == | != | < | > | <= | >=
+if tag is referenced by itself the value of the tag in the system needs to be accessed (not modified)
+if the tag is accompanied with a value the system needs to be modified (not accessed)
+    -> the context from which the tag is referenced in this case dictates whether resources are added or removed
+    -> in a source rule "x Tag_name" will increase the quantity of the tag with the name "tag_name" by x
+    -> in a sink rule "x Tag_name" will decrease the quantity of the tag with the name "tag_name" by x
 
-SOURCE | SINK (if conditionals) tag quantity
-if conditionals -> if conditionals
-quantity -> if conditionals | + - * /
-
+Object Format:
 {
     type: num
     name: var_name,

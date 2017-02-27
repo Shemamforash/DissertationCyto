@@ -15,7 +15,7 @@ var consoleElements, Evaluator = {
     },
     init: function () {
         consoleElements = Evaluator.elements;
-        Evaluator.tokenizer("INTERNAL damage = 5 min = 2 max = 7 reset = 0");
+        Evaluator.tokenizer("INTERNAL damage = 5 min = 2 max = 7 reset = 0;");
     },
     bind: function () {
 
