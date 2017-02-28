@@ -1,4 +1,4 @@
-e.g. INTERNAL (name- string) = (value- bool or num), min (if num) = value, max (if num) = value, reset = value // for declaration
+e.g. INTERNAL VAR (name- string) = (value- bool or num), min (if num) = value, max (if num) = value, reset = value // for declaration
 e.g. INTERNAL name moperator =
 //string implies variable, so needs to be looked up to check if it exists
 
@@ -15,7 +15,7 @@ STATEMENT FORMATS:
 mathexpr = mathexpr operator mathexpr | value | variable -> check if it evaluates to a number, if not it's invalid
 ifstmt = IF conditional THEN (mathexpr | ifstmt) ELSE (mathexpr | ifstmt)
 conditional = variable operator variable | bracket conditional operator conditional bracket | true | false | variable
-variable_declaration = INTERNAL type name valuetype (lowerbound valuetype) (upperbound valuetype) (reset valuetype)
+variable_declaration = INTERNAL name equals valuetype (lowerbound valuetype) (upperbound valuetype) (reset valuetype)
 variable_assignment = rulescope name equals valuetype arith valuetype | if conditionals | operator value
 
 

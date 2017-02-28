@@ -7,7 +7,7 @@
 
 var consoleElements, Evaluator = {
     elements: {
-        keywords: ["if", "(", ")", "else", "INTERNAL", "SOURCE", "SINK", "reset", "min", "max"],
+        keywords: ["if", "(", ")", "else", "INTERNAL", "SOURCE", "SINK", "reset", "min", "max", "VAR"],
         conditional_symbols: ["<", ">", "<=", ">=", "=="],
         operators: ["+", "-", "*", "/", "="],
         input: "",
@@ -15,115 +15,10 @@ var consoleElements, Evaluator = {
     },
     init: function () {
         consoleElements = Evaluator.elements;
-        Evaluator.tokenizer("INTERNAL damage = 5 min = 2 max = 7 reset = 0;");
+        Evaluator.tokenizer("INTERNAL VAR damage = -5 min = 2 max = 7 reset = 0;", {variables: []});
     },
     bind: function () {
 
-    },
-    strip_whitespace: function (input) {
-        var next_char, next_whitespace;
-        if (input.length === 0) {
-            return null;
-        }
-        next_char = input.charAt(0);
-        if (next_char === " ") {
-            return Evaluator.strip_whitespace(input.slice(1, input.length));
-        } else {
-            next_whitespace = input.indexOf(" ") === -1 ? input.length : input.indexOf(" ");
-            return {
-                token: input.substring(0, next_whitespace),
-                input: input.substring(next_whitespace, input.length)
-            };
-        }
-    },
-    //NOTE ALL TO_X FUNCTIONS SHOULD RETURN NULL IF THE TOKEN IS NOT MATCHED/UNRECOGNISED SYMBOL
-    to_bool: function (token) {
-        if (token === "true") {
-            return Evaluator.wrap_type_value(true, "bool");
-        } else if (token === "false") {
-            return Evaluator.wrap_type_value(false, "bool");
-        }
-        return null;
-    },
-    to_num: function (token) {
-        var num;
-        if (!isNaN(Number(token.charAt(0)))) {
-            num = Number(token);
-            if (isNaN(num)) {
-                return {error: "Incorrectly formatted number '" + token + "'"};
-            } else {
-                return Evaluator.wrap_type_value(num, "number");
-            }
-        }
-        return null;
-    },
-    to_keyword: function (token) {
-        if (consoleElements.keywords.indexOf(token) !== -1) {
-            return Evaluator.wrap_type_value(token, "keyword");
-        }
-        return null;
-    },
-    to_variable: function (token) {
-        if (token.charAt(0) === ".") {
-            return Evaluator.wrap_type_value(token, "ivar");
-        } else if (token.charAt(0) === "#") {
-            return Evaluator.wrap_type_value(token, "tvar");
-        }
-        return null;
-    },
-    to_operator: function (token) {
-        if (consoleElements.operators.indexOf(token) !== -1) {
-            return Evaluator.wrap_type_value(token, "operator");
-        }
-        return null;
-    },
-    to_conditional: function (token) {
-        if (consoleElements.conditional_symbols.indexOf(token) !== -1) {
-            return Evaluator.wrap_type_value(token, "conditional");
-        }
-        return null;
-    },
-    wrap_type_value: function (value, type) {
-        return {
-            type: type,
-            value: value
-        }
-    },
-    read_token: function (input) {
-        var current_token = Evaluator.strip_whitespace(input);
-        var parsed_token = null;
-        if (current_token) {
-            parsed_token = Evaluator.to_bool(current_token.token);
-            if (parsed_token === null) {
-                parsed_token = Evaluator.to_num(current_token.token);
-            }
-            if (parsed_token === null) {
-                parsed_token = Evaluator.to_keyword(current_token.token);
-            }
-            if (parsed_token === null) {
-                parsed_token = Evaluator.to_variable(current_token.token);
-            }
-            if (parsed_token === null) {
-                parsed_token = Evaluator.to_operator(current_token.token);
-            }
-            if (parsed_token === null) {
-                parsed_token = Evaluator.to_conditional(current_token.token);
-            }
-            if (parsed_token !== null) {
-                if (parsed_token.hasOwnProperty("error")) {
-                    console.log("ERROR: " + parsed_token.error);
-                } else {
-                    console.log("Well parsed: " + parsed_token.value + " type " + parsed_token.type);
-                }
-            } else {
-                console.log("Badly parsed: " + current_token.token);
-            }
-            return {
-                input: current_token.input,
-                parsed_token: parsed_token
-            };
-        }
-        return null;
     },
 
     //https://www.codeproject.com/Articles/345888/How-to-write-a-simple-interpreter-in-JavaScript
@@ -142,9 +37,9 @@ var consoleElements, Evaluator = {
             tokens.push(new_token);
         };
         var peek = function () {
-            return input[input_iterator + 2];
+            return input[input_iterator];
         };
-        var read_number = function () {
+        var read_number = function (is_negative) {
             var final_num = "";
             var num_valid = true;
             while (num_valid) {
@@ -168,6 +63,9 @@ var consoleElements, Evaluator = {
             }
 
             if(num_valid){
+                if(is_negative){
+                    final_num = -final_num;
+                }
                 add_token("number", parseFloat(final_num));
             } else {
                 console.log("Number badly formatted: " + final_num + current_char);
@@ -192,29 +90,130 @@ var consoleElements, Evaluator = {
             next_char();
             if (Evaluator.is_empty(current_char)) {
                 //do nothing
+            } else if ((Evaluator.is_digit(current_char) && prev_char === " ") || (current_char === "-" && Evaluator.is_digit(peek()))) {
+                if(current_char === "-"){
+                    next_char();
+                    read_number(true)
+                } else {
+                    read_number(false);
+                }
             } else if (Evaluator.is_operator(current_char) && prev_char === " ") {
                 add_token(current_char);
-            } else if (Evaluator.is_digit(current_char) && prev_char === " ") {
-                read_number();
             } else if (Evaluator.is_identifier(current_char) && prev_char === " ") {
                 read_identifier();
             }
         }
-        console.log(tokens, economy_node);
+        Evaluator.print_tokens(tokens);
         add_token("end", null);
-        // var rule_type = tokens.shift().type;
-        // if(rule_type === "INTERNAL") {
-        //     Evaluator.create_internal_rule(tokens);
-        // } else if (rule_type === "SOURCE"){
-        //     Evaluator.create_source_rule(tokens);
-        // } else if (rule_type === "SINK"){
-        //     Evaluator.create_sink_rule(tokens);
-        // } else {
-        //     console.log("not a valid rule format");
-        // }
+        var rule_type = tokens.shift().type;
+        if(rule_type === "INTERNAL") {
+            var is_declaration = tokens.shift().type === "VAR";
+            if(is_declaration) {
+                console.log(Evaluator.create_internal_variable(tokens, economy_node));
+            } else {
+                Evaluator.create_internal_rule(tokens, economy_node);
+            }
+        } else if (rule_type === "SOURCE"){
+            Evaluator.create_source_rule(tokens, economy_node);
+        } else if (rule_type === "SINK"){
+            Evaluator.create_sink_rule(tokens, economy_node);
+        } else {
+            console.log("not a valid rule format");
+        }
         // Evaluator.parser(tokens);
     },
 
+    print_tokens: function(tokens){
+        for(var i = 0; i < tokens.length; ++i){
+            console.log(tokens[i]);
+        }
+    },
+    create_internal_variable: function(tokens, economy_node){
+        var variable_name = tokens.shift().value;
+        for(var i = 0; i < economy_node.variables.length; ++i){
+            if(economy_node.variables[i].name === variable_name){
+                return {
+                    type: "error",
+                    message: "variable '" + variable_name + "' already exists on this node"
+                }
+            }
+        }
+        if(tokens.shift().type !== "="){
+            return {
+                type: "error",
+                message: "initial value assignment syntax error"
+            }
+        }
+        var initial_value = tokens.shift();
+        if(initial_value.type !== ("number" || "bool")) {
+            return {
+                type: "error",
+                message: "declared variable must be boolean or number"
+            }
+        }
+        initial_value = initial_value.value;
+        var max_value = undefined;
+        var min_value = undefined;
+        var reset_value = undefined;
+        for(var i = 0; i < tokens.length; ++i){
+            if(tokens[i].type === "min"){
+                if(check_valid_assignment(i)){
+                    min_value = tokens[i + 2].value;
+                } else {
+                    return {
+                        type: "error",
+                        message: "min value assignment syntax error"
+                    }
+                }
+            }
+            else if(tokens[i].type === "max"){
+                if(check_valid_assignment(i)){
+                    max_value = tokens[i + 2].value;
+                } else {
+                    return {
+                        type: "error",
+                        message: "max value assignment syntax error"
+                    }
+                }
+
+            } else if(tokens[i].type === "reset"){
+                if(check_valid_assignment(i)){
+                    reset_value = tokens[i + 2].value;
+                } else {
+                    return {
+                        type: "error",
+                        message: "reset value assignment syntax error"
+                    }
+                }
+            }
+        }
+
+        var new_variable = {
+            name: variable_name,
+            initial_value: initial_value,
+            max_value: max_value,
+            min_value: min_value,
+            reset_value: reset_value
+        };
+
+        economy_node.variables.push(new_variable);
+
+        return {
+            type: "success",
+            message: "initialized new variable '" + variable_name + "'"
+        };
+
+        function check_valid_assignment(i){
+            if(tokens[i + 1].type !== "=") {
+                //should be assignment
+                return false;
+            } else if (tokens[i + 2].type !== "number") {
+                //should be a number
+                return false;
+            }
+            return true;
+        }
+    },
     create_internal_rule: function(tokens, economy_node){
         var variable_name = tokens.shift();
         //check for variable existence;
@@ -223,6 +222,7 @@ var consoleElements, Evaluator = {
 
         } else {
             var value = tokens.shift();
+
 
             economy_node.internal_rules = [];
             economy_node.internal_rules.push({
@@ -250,139 +250,6 @@ var consoleElements, Evaluator = {
     is_identifier: function (char) {
         return !(Evaluator.is_operator(char) || Evaluator.is_digit(char) || Evaluator.is_empty(char)) && typeof char === "string";
     },
-
-    parser: function (tokens) {
-        var ast = [], current_token = tokens[0], token_iterator = 1, symbols = {};
-        var read_token = function () {
-            current_token = tokens[token_iterator];
-            ++token_iterator;
-        };
-        var symbol = function (id, null_function, left_binding_power, left_associative_function) {
-            var new_symbol = symbols[id] || {};
-            symbols[id] = {
-                left_binding_power: new_symbol.left_binding_power || left_binding_power,
-                null_function: new_symbol.null_function || null_function,
-                left_associative_function: new_symbol.left_associative_function || left_associative_function
-            };
-            return symbols[id];
-        };
-        var interpret_token = function (token) {
-            var sym = {};
-            if (symbols[token.type]) {
-                console.log(token.type);
-                sym.left_binding_power = symbols[token.type].left_binding_power;
-                sym.null_function = symbols[token.type].null_function;
-                sym.left_associative_function = symbols[token.type].left_associative_function;
-            }
-            sym.type = token.type;
-            sym.value = token.value;
-            return sym;
-        };
-        var expression = function (right_binding_power) {
-            var left, t = interpret_token(current_token);
-            read_token();
-            if (!t.null_function) {
-                console.log("unexpected token");
-                console.log(t);
-                console.log(current_token);
-                console.log(symbols);
-            }
-            left = t.null_function(t);
-            while (right_binding_power < interpret_token(current_token).left_binding_power) {
-                t = interpret_token(current_token);
-                read_token();
-                if (!t.left_associative_function) {
-                    console.log("unexpected token" + t);
-                }
-                left = t.left_associative_function(left);
-            }
-            return left;
-        };
-        var infix_creator = function (id, left_binding_power, right_binding_power, left_associative_function) {
-            right_binding_power = right_binding_power || left_binding_power;
-            left_associative_function = left_associative_function || function (left) {
-                    return {
-                        type: id,
-                        left: left,
-                        right: expression(right_binding_power)
-                    };
-                };
-            symbol(id, null, left_binding_power, left_associative_function);
-
-        };
-        var prefix_creator = function (id, right_binding_power) {
-            symbol(id, function () {
-                return {
-                    type: id,
-                    right: expression(right_binding_power)
-                };
-            });
-        };
-        prefix_creator("-", 7);
-        infix_creator("^", 6, 5);
-        infix_creator("*", 4);
-        infix_creator("/", 4);
-        infix_creator("%", 4);
-        infix_creator("+", 3);
-        infix_creator("-", 3);
-        symbol(")");
-        symbol("end");
-        symbol("(", function () {
-            var value = expression(2);
-            if (symbol(current_token) !== ")") {
-                console.log("no closing parenthesis");
-            }
-            read_token();
-            return value;
-        });
-        symbol("number", function (number) {
-            return number;
-        });
-        while (interpret_token(current_token).type !== "end") {
-            ast.push(expression(0));
-        }
-        console.log(ast);
-        Evaluator.evaluate(ast);
-    },
-    evaluate: function (ast) {
-        var operators = {
-            "+": function (a, b) {
-                return a + b;
-            },
-            "-": function (a, b) {
-                return a - b;
-            },
-            "*": function (a, b) {
-                return a * b;
-            },
-            "/": function (a, b) {
-                return a / b;
-            },
-            "^": function (a, b) {
-                return Math.pow(a, b);
-            },
-            "%": function (a, b) {
-                return a % b;
-            }
-        };
-
-        var parse_node = function (node) {
-            if(node.type === "number"){
-                return node.value;
-            } else if(operators[node.type]){
-                if(node.left){
-                    return operators[node.type](parse_node(node.left), parse_node(node.right));
-                }
-                return operators[node.type](parse_node(node.right));
-            }
-        };
-        for (var i = 0; i < ast.length; ++i) {
-            var evaluated_node = parse_node(ast[i]);
-            if (evaluated_node !== undefined) {
-                console.log(evaluated_node);
-            }
-        }
-    }
 };
 
 $(document).ready(Evaluator.init());
