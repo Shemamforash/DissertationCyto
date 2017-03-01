@@ -7,7 +7,7 @@
 
 var consoleElements, Evaluator = {
     elements: {
-        keywords: ["if", "(", ")", "else", "INTERNAL", "SOURCE", "SINK", "reset", "min", "max", "VAR"],
+        keywords: ["if", "(", ")", "else", "then", "INTERNAL", "SOURCE", "SINK", "reset", "min", "max", "VAR"],
         conditional_symbols: ["<", ">", "<=", ">=", "=="],
         operators: ["+", "-", "*", "/", "="],
         input: "",
@@ -15,7 +15,7 @@ var consoleElements, Evaluator = {
     },
     init: function () {
         consoleElements = Evaluator.elements;
-        Evaluator.tokenizer("INTERNAL VAR damage = -5 min = 2 max = 7 reset = 0;", {variables: []});
+        Evaluator.tokenizer("INTERNAL damage *= if true then 4 * 6 / 3 else 2 ;", {variables: [{name: "damage"}], internal_rules: []});
     },
     bind: function () {
 
@@ -46,7 +46,7 @@ var consoleElements, Evaluator = {
                 if (Evaluator.is_digit(current_char)) {
                     final_num += current_char;
                 } else if (current_char === ".") {
-                    if(final_num.indexOf(".") === -1) {
+                    if (final_num.indexOf(".") === -1) {
                         final_num += current_char;
                         continue;
                     } else {
@@ -62,8 +62,8 @@ var consoleElements, Evaluator = {
                 next_char();
             }
 
-            if(num_valid){
-                if(is_negative){
+            if (num_valid) {
+                if (is_negative) {
                     final_num = -final_num;
                 }
                 add_token("number", parseFloat(final_num));
@@ -75,9 +75,17 @@ var consoleElements, Evaluator = {
             var final_identifier = "";
             while (Evaluator.is_identifier(current_char)) {
                 final_identifier += current_char;
+                if (current_char === ";") {
+                    return;
+                }
                 next_char();
             }
             if (consoleElements.keywords.indexOf(final_identifier) !== -1) {
+                if(final_identifier === "then"){
+                    final_identifier = "?";
+                } else if (final_identifier === "else"){
+                    final_identifier = ":";
+                }
                 add_token(final_identifier, "");
             } else if (final_identifier === "true" || final_identifier === "false") {
                 add_token("bool", final_identifier === "true");
@@ -91,31 +99,44 @@ var consoleElements, Evaluator = {
             if (Evaluator.is_empty(current_char)) {
                 //do nothing
             } else if ((Evaluator.is_digit(current_char) && prev_char === " ") || (current_char === "-" && Evaluator.is_digit(peek()))) {
-                if(current_char === "-"){
+                if (current_char === "-") {
                     next_char();
                     read_number(true)
                 } else {
                     read_number(false);
                 }
             } else if (Evaluator.is_operator(current_char) && prev_char === " ") {
-                add_token(current_char);
+                if(Evaluator.is_operator(peek())){
+                    var operator = current_char;
+                    next_char();
+                    if(peek() === " ") {
+                        operator += current_char;
+                        add_token(operator);
+                    }
+                } else if(Evaluator.is_empty(peek())){
+                    add_token(current_char);
+                }
             } else if (Evaluator.is_identifier(current_char) && prev_char === " ") {
                 read_identifier();
+            }
+            if (current_char === ";") {
+                break;
             }
         }
         Evaluator.print_tokens(tokens);
         add_token("end", null);
         var rule_type = tokens.shift().type;
-        if(rule_type === "INTERNAL") {
-            var is_declaration = tokens.shift().type === "VAR";
-            if(is_declaration) {
+        if (rule_type === "INTERNAL") {
+            var is_declaration = tokens[0].type === "VAR";
+            if (is_declaration) {
+                tokens.shift();
                 console.log(Evaluator.create_internal_variable(tokens, economy_node));
             } else {
                 Evaluator.create_internal_rule(tokens, economy_node);
             }
-        } else if (rule_type === "SOURCE"){
+        } else if (rule_type === "SOURCE") {
             Evaluator.create_source_rule(tokens, economy_node);
-        } else if (rule_type === "SINK"){
+        } else if (rule_type === "SINK") {
             Evaluator.create_sink_rule(tokens, economy_node);
         } else {
             console.log("not a valid rule format");
@@ -123,29 +144,29 @@ var consoleElements, Evaluator = {
         // Evaluator.parser(tokens);
     },
 
-    print_tokens: function(tokens){
-        for(var i = 0; i < tokens.length; ++i){
+    print_tokens: function (tokens) {
+        for (var i = 0; i < tokens.length; ++i) {
             console.log(tokens[i]);
         }
     },
-    create_internal_variable: function(tokens, economy_node){
+    create_internal_variable: function (tokens, economy_node) {
         var variable_name = tokens.shift().value;
-        for(var i = 0; i < economy_node.variables.length; ++i){
-            if(economy_node.variables[i].name === variable_name){
+        for (var i = 0; i < economy_node.variables.length; ++i) {
+            if (economy_node.variables[i].name === variable_name) {
                 return {
                     type: "error",
                     message: "variable '" + variable_name + "' already exists on this node"
                 }
             }
         }
-        if(tokens.shift().type !== "="){
+        if (tokens.shift().type !== "=") {
             return {
                 type: "error",
                 message: "initial value assignment syntax error"
             }
         }
         var initial_value = tokens.shift();
-        if(initial_value.type !== ("number" || "bool")) {
+        if (initial_value.type !== ("number" || "bool")) {
             return {
                 type: "error",
                 message: "declared variable must be boolean or number"
@@ -155,9 +176,9 @@ var consoleElements, Evaluator = {
         var max_value = undefined;
         var min_value = undefined;
         var reset_value = undefined;
-        for(var i = 0; i < tokens.length; ++i){
-            if(tokens[i].type === "min"){
-                if(check_valid_assignment(i)){
+        for (var i = 0; i < tokens.length; ++i) {
+            if (tokens[i].type === "min") {
+                if (check_valid_assignment(i)) {
                     min_value = tokens[i + 2].value;
                 } else {
                     return {
@@ -166,8 +187,8 @@ var consoleElements, Evaluator = {
                     }
                 }
             }
-            else if(tokens[i].type === "max"){
-                if(check_valid_assignment(i)){
+            else if (tokens[i].type === "max") {
+                if (check_valid_assignment(i)) {
                     max_value = tokens[i + 2].value;
                 } else {
                     return {
@@ -176,8 +197,8 @@ var consoleElements, Evaluator = {
                     }
                 }
 
-            } else if(tokens[i].type === "reset"){
-                if(check_valid_assignment(i)){
+            } else if (tokens[i].type === "reset") {
+                if (check_valid_assignment(i)) {
                     reset_value = tokens[i + 2].value;
                 } else {
                     return {
@@ -203,8 +224,8 @@ var consoleElements, Evaluator = {
             message: "initialized new variable '" + variable_name + "'"
         };
 
-        function check_valid_assignment(i){
-            if(tokens[i + 1].type !== "=") {
+        function check_valid_assignment(i) {
+            if (tokens[i + 1].type !== "=") {
                 //should be assignment
                 return false;
             } else if (tokens[i + 2].type !== "number") {
@@ -214,30 +235,67 @@ var consoleElements, Evaluator = {
             return true;
         }
     },
-    create_internal_rule: function(tokens, economy_node){
-        var variable_name = tokens.shift();
+    create_internal_rule: function (tokens, economy_node) {
+        var variable_name = tokens.shift().value;
+        var variable_exists = false;
         //check for variable existence;
-        var var_exists = false;
-        if (var_exists) {
+        for (var i = 0; i < economy_node.variables.length; ++i) {
+            if (economy_node.variables[i].name === variable_name) {
+                variable_exists = true;
+            }
+        }
+        if(variable_exists) {
+            var stmt = "";
+            var operator = tokens.shift().type;
+            console.log(operator);
+            if(Evaluator.is_assignment_operator(operator)){
+                var next_token = tokens.shift();
+                while(next_token.type !== "end"){
+                    console.log(next_token);
 
+                    if(next_token.type === "if"){
+                          next_token = tokens.shift();
+                    }
+
+                    if(next_token.type === "number" || next_token.type === "bool"){
+                        stmt += next_token.value;
+                    } else {
+                        stmt += next_token.type;
+                    }
+                    next_token = tokens.shift();
+                }
+                if(typeof(eval(stmt)) === "number") {
+                    console.log("it's a number!" + eval(stmt));
+                }
+            } else {
+                return {
+                    type: "error",
+                    message: "expecting assignment operator"
+                }
+            }
+
+            var next_token = tokens.shift();
+
+
+
+            economy_node.internal_rules.push({});
         } else {
-            var value = tokens.shift();
-
-
-            economy_node.internal_rules = [];
-            economy_node.internal_rules.push({
-
-            });
+            return {
+                type: "error",
+                message: "variable '" + variable_name + "' referenced but does not exist on this node"
+            }
         }
     },
-    create_source_rule: function(tokens){
+    create_source_rule: function (tokens) {
 
     },
-    create_sink_rule: function(tokens){
+    create_sink_rule: function (tokens) {
 
     },
 
-
+    is_assignment_operator: function(operator){
+      return ["=", "*=", "+=", "/=", "-="].indexOf(operator) !== -1;
+    },
     is_operator: function (char) {
         return ["+", "-", "/", "*", "%", "(", ")", "=", "^"].indexOf(char) !== -1;
     },
