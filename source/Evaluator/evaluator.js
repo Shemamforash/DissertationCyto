@@ -15,7 +15,7 @@ var consoleElements, Evaluator = {
     },
     init: function () {
         consoleElements = Evaluator.elements;
-        Evaluator.tokenizer("INTERNAL damage *= if true then 4 * 6 / 3 else 2 ;", {variables: [{name: "damage"}], internal_rules: []});
+        Evaluator.tokenizer("INTERNAL damage *= if true then 4 * 6 / 3 else 2 endif ;", {variables: [{name: "damage"}], internal_rules: []});
     },
     bind: function () {
 
@@ -86,7 +86,7 @@ var consoleElements, Evaluator = {
                 } else if (final_identifier === "else"){
                     final_identifier = ":";
                 }
-                add_token(final_identifier, "");
+                add_token(final_identifier, final_identifier);
             } else if (final_identifier === "true" || final_identifier === "false") {
                 add_token("bool", final_identifier === "true");
             }
@@ -148,6 +148,27 @@ var consoleElements, Evaluator = {
         for (var i = 0; i < tokens.length; ++i) {
             console.log(tokens[i]);
         }
+    },
+    parse_if: function(tokens){
+        var conditonal_stmt = "";
+        var then_stmt = "";
+        var else_stmt = "";
+        var next_token = tokens.shift();
+        while(next_token.type !== "then") {
+            if(next_token.type === "if"){
+                var current_token = next_token;
+                var parsed = Evaluator.parse_if(tokens);
+                conditional_stmt += parsed.stmt;
+                tokens = parsed.tokens;
+            } else {
+                conditional_stmt += next_token.type;
+            }
+        }
+        var final_stmt = conditional_stmt + " ? " + then_stmt + " : " + else_stmt;
+        return {
+            stmt: final_stmt,
+            tokens: tokens
+        };
     },
     create_internal_variable: function (tokens, economy_node) {
         var variable_name = tokens.shift().value;
@@ -254,7 +275,7 @@ var consoleElements, Evaluator = {
                     console.log(next_token);
 
                     if(next_token.type === "if"){
-                          next_token = tokens.shift();
+                        Evaluator.parse_if(tokens);
                     }
 
                     if(next_token.type === "number" || next_token.type === "bool"){
