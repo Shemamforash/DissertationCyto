@@ -8,7 +8,7 @@
 var consoleElements, Evaluator = {
     elements: {
         rule_types: ["INTERNAL", "SOURCE", "SINK"],
-        keywords: ["if", "else", "then", "endif", "reset", "min", "max", "VAR", ";"],
+        keywords: ["if", "else", "then", "endif", "reset", "min", "max", "VAR", ";", "(", ")"],
         conditional_operators: ["<", ">", "<=", ">=", "==", "!="],
         logical_operators: ["&&", "||", "!"],
         assignment_operators: ["*=", "+=", "-=", "/=", "^=", "++", "--"],
@@ -22,10 +22,22 @@ var consoleElements, Evaluator = {
             variables: [{name: "damage"}],
             internal_rules: []
         });
-        // Evaluator.tokenizer("INTERNAL damage *= if true then 6 else 2 endif ;", {variables: [{name: "damage"}], internal_rules: []}); //REGULAR IF
-        // Evaluator.tokenizer("INTERNAL damage *= if true then if true then 5 else 6 endif else 2 endif ;", {variables: [{name: "damage"}], internal_rules: []}); //NESTED IF
-        // Evaluator.tokenizer("INTERNAL damage *= if false then 6 else if false then 4 else if true then 2 else 4 endif endif endif ;", {variables: [{name: "damage"}], internal_rules: []}); //SEQUENTIAL IF
-        // Evaluator.tokenizer("INTERNAL damage *= if true then if false then 5 else if true then 6 else 3 endif endif else 2 endif ;", {variables: [{name: "damage"}], internal_rules: []}); //NESTED IF
+        Evaluator.tokenizer("INTERNAL damage *= if false then 6 else ( 2 * 3 ) ^ 4 / 6 endif ;", {
+            variables: [{name: "damage"}],
+            internal_rules: []
+        }); //REGULAR IF
+        Evaluator.tokenizer("INTERNAL damage *= if true then if true then 5 else 6 endif else 2 endif ;", {
+            variables: [{name: "damage"}],
+            internal_rules: []
+        }); //NESTED IF
+        Evaluator.tokenizer("INTERNAL damage *= if false then 6 else if false then 4 else if true then 2 else 4 endif endif endif ;", {
+            variables: [{name: "damage"}],
+            internal_rules: []
+        }); //SEQUENTIAL IF
+        Evaluator.tokenizer("INTERNAL damage *= if true then if false then 5 else if true then 6 else 3 endif endif else 2 endif ;", {
+            variables: [{name: "damage"}],
+            internal_rules: []
+        }); //NESTED IF
     },
     bind: function () {
 
@@ -63,6 +75,7 @@ var consoleElements, Evaluator = {
             } else if (current_token.value === "else") {
                 current_token.tag = else_counter;
             } else if (current_token.value === "endif") {
+                current_token.tag = if_counter;
                 --if_counter;
                 --then_counter;
                 --else_counter;
@@ -103,7 +116,7 @@ var consoleElements, Evaluator = {
             }
         }
         tokens = Evaluator.tag_ifs(tokens);
-        Evaluator.print_tokens(tokens);
+        // Evaluator.print_tokens(tokens);
         if (tokens.length > 0) {
             var rule_type = tokens.shift().value;
             if (rule_type === "INTERNAL") {
@@ -147,6 +160,9 @@ var consoleElements, Evaluator = {
         if (consoleElements.assignment_operators.indexOf(token) === -1) {
             return false;
         } else {
+            if (token === "^=") {
+                token = "**=";
+            }
             return Evaluator.wrap_token("assignment_operator", token);
         }
     },
@@ -154,6 +170,9 @@ var consoleElements, Evaluator = {
         if (consoleElements.mathematical_operators.indexOf(token) === -1) {
             return false;
         } else {
+            if (token === "^") {
+                token = "**";
+            }
             return Evaluator.wrap_token("mathematical_operator", token);
         }
     },
@@ -195,7 +214,7 @@ var consoleElements, Evaluator = {
             return false;
         }
     },
-    parse_if: function (tokens, depth) {
+    parse_if: function (tokens, current_if_depth) {
         var conditional_stmt = [], then_stmt = [], else_stmt = [];
         var stmts = [conditional_stmt, then_stmt, else_stmt];
         var all_tokens = [];
@@ -205,18 +224,14 @@ var consoleElements, Evaluator = {
         var include_token;
         while (next_token !== undefined) {
             include_token = true;
-            if (next_token.value === "if") {
-                var result = Evaluator.parse_if(tokens, depth + 1);
-                tokens = result.tokens;
-            }
-            if (next_token.value === "then") {
+            if (next_token.value === "then" && next_token.tag === current_if_depth) {
                 var parsed_conditional = Evaluator.parse_statement(conditional_stmt);
                 if (typeof (eval(parsed_conditional)) === "boolean") {
                     final_stmt += parsed_conditional + " ? ";
                 }
                 ++stmt_iterator;
                 include_token = false;
-            } else if (next_token.value === "else") {
+            } else if (next_token.value === "else" && next_token.tag === current_if_depth) {
                 var parsed_then = Evaluator.parse_statement(then_stmt);
                 if (typeof (eval(parsed_then)) === "number" || typeof (eval(parsed_then)) === "boolean") {
                     final_stmt += parsed_then;
@@ -224,9 +239,9 @@ var consoleElements, Evaluator = {
                 final_stmt += " : ";
                 ++stmt_iterator;
                 include_token = false;
-            } else if (next_token.value === "endif") {
+            } else if (next_token.value === "endif" && next_token.tag === current_if_depth) {
                 var parsed_else = Evaluator.parse_statement(else_stmt);
-                if (typeof (eval(parsed_else)) === "number" || typeof (eval(parsed_then)) === "boolean") {
+                if (typeof (eval(parsed_else)) === "number" || typeof (eval(parsed_else)) === "boolean") {
                     final_stmt += parsed_else;
                 }
                 break;
@@ -237,7 +252,7 @@ var consoleElements, Evaluator = {
             next_token = tokens.shift();
         }
         return {
-            stmt: final_stmt,
+            stmt: "(" + final_stmt + ")",
             tokens: tokens
         };
     },
@@ -246,12 +261,16 @@ var consoleElements, Evaluator = {
         var final_stmt = "";
         var result;
         while (next_token !== undefined) {
-            if (next_token.value === "if") {
-                result = Evaluator.parse_if(tokens, 0)
+            if(next_token.value === "(" || next_token.value === ")"){
+                final_stmt += next_token.value;
+            }
+            else if (next_token.value === "if") {
+                result = Evaluator.parse_if(tokens, next_token.tag);
                 tokens = result.tokens;
                 final_stmt += result.stmt;
+                console.log(final_stmt);
             }
-            if (next_token.type === "number") {
+            else if (next_token.type === "number") {
                 if (tokens.length > 1) {
                     if (tokens[0].type === "conditional_operator" || tokens[0].type === "logical_operator") {
                         tokens.unshift(next_token);
@@ -260,21 +279,24 @@ var consoleElements, Evaluator = {
                         final_stmt += result.stmt;
                     } else if (tokens[0].type === "mathematical_operator") {
                         tokens.unshift(next_token);
-                        Evaluator.parse_to_type(tokens, "number");
+                        result = Evaluator.parse_to_type(tokens, "number");
+                        tokens = result.tokens;
+                        final_stmt += result.stmt;
                     } else if (tokens[0].type === "number" || tokens[0].type === "boolean") {
                         console.log("statement cannot be evaluated");
                     } else {
                         return next_token.value;
                     }
                 } else {
-                    return next_token.value;
+                    final_stmt += next_token.value;
+                    break;
                 }
             } else if (next_token.type === "boolean") {
                 return next_token.value;
             }
             next_token = tokens.shift();
-            return final_stmt;
         }
+        return final_stmt;
     },
     parse_to_type: function (tokens, type) {
         var final_stmt = "";
@@ -282,17 +304,15 @@ var consoleElements, Evaluator = {
         while (next_token !== undefined) {
             if (next_token.type === "keyword") {
                 if (next_token.value === "if") {
-                    var result = Evaluator.parse_if(tokens, 0);
+                    var result = Evaluator.parse_if(tokens, next_token.tag);
                     tokens = result.tokens;
                     final_stmt += result.stmt;
-                    console.log(result);
                 }
                 break;
             }
             final_stmt += next_token.value;
             next_token = tokens.shift();
         }
-        console.log(final_stmt);
         if (typeof (eval(final_stmt)) === type) {
             return {
                 stmt: final_stmt,
