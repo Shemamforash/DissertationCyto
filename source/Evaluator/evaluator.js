@@ -18,10 +18,11 @@ var consoleElements, Evaluator = {
     },
     init: function () {
         consoleElements = Evaluator.elements;
-        Evaluator.tokenizer("INTERNAL damage *= if true then 6 else 2 endif ;", {variables: [{name: "damage"}], internal_rules: []}); //REGULAR IF
-        Evaluator.tokenizer("INTERNAL damage *= if true then if true then 5 else 6 endif else 2 endif ;", {variables: [{name: "damage"}], internal_rules: []}); //NESTED IF
-        Evaluator.tokenizer("INTERNAL damage *= if false then 6 else if false then 4 else if true then 2 else 4 endif endif endif ;", {variables: [{name: "damage"}], internal_rules: []}); //SEQUENTIAL IF
-        Evaluator.tokenizer("INTERNAL damage *= if true then if false then 5 else if true then 6 else 3 endif endif else 2 endif ;", {variables: [{name: "damage"}], internal_rules: []}); //NESTED IF
+        Evaluator.tokenizer("INTERNAL damage *= if 4 > 3 && 2 * 4 then 4 else 2 endif", {variables: [{name: "damage"}], internal_rules: []});
+        // Evaluator.tokenizer("INTERNAL damage *= if true then 6 else 2 endif ;", {variables: [{name: "damage"}], internal_rules: []}); //REGULAR IF
+        // Evaluator.tokenizer("INTERNAL damage *= if true then if true then 5 else 6 endif else 2 endif ;", {variables: [{name: "damage"}], internal_rules: []}); //NESTED IF
+        // Evaluator.tokenizer("INTERNAL damage *= if false then 6 else if false then 4 else if true then 2 else 4 endif endif endif ;", {variables: [{name: "damage"}], internal_rules: []}); //SEQUENTIAL IF
+        // Evaluator.tokenizer("INTERNAL damage *= if true then if false then 5 else if true then 6 else 3 endif endif else 2 endif ;", {variables: [{name: "damage"}], internal_rules: []}); //NESTED IF
     },
     bind: function () {
 
@@ -160,24 +161,20 @@ var consoleElements, Evaluator = {
         }
     },
     parse_if: function (tokens, depth) {
-        var conditional_stmt = [];
-        var then_stmt = [];
-        var else_stmt = [];
+        var conditional_stmt = [], then_stmt = [], else_stmt = [];
         var stmts = [conditional_stmt, then_stmt, else_stmt];
         var stmt_iterator = 0;
         var final_stmt = "";
         var next_token = tokens.shift();
+        var include_token;
         while (next_token !== undefined) {
-            var include_token = true;
+            include_token = true;
             if (next_token.value === "if") {
                 var result = Evaluator.parse_if(tokens, depth + 1);
                 final_stmt += result.stmt;
-                // console.log("d1: " + result.stmt);
                 tokens = result.tokens;
             }
             if (next_token.value === "then") {
-                // console.log("conds ");
-                // Evaluator.print_tokens(conditional_stmt);
                 var parsed_conditional = Evaluator.parse_statement(conditional_stmt);
                 if (typeof (eval(parsed_conditional)) === "boolean") {
                     final_stmt += parsed_conditional + " ? ";
@@ -185,8 +182,6 @@ var consoleElements, Evaluator = {
                 ++stmt_iterator;
                 include_token = false;
             } else if (next_token.value === "else") {
-                // console.log("then " + depth);
-                // Evaluator.print_tokens(then_stmt);
                 var parsed_then = Evaluator.parse_statement(then_stmt);
                 if (typeof (eval(parsed_then)) === "number") {
                     final_stmt += parsed_then;
@@ -195,7 +190,6 @@ var consoleElements, Evaluator = {
                 ++stmt_iterator;
                 include_token = false;
             } else if (next_token.value === "endif") {
-                // Evaluator.print_tokens(else_stmt);
                 var parsed_else = Evaluator.parse_statement(else_stmt);
                 if (typeof (eval(parsed_else)) === "number") {
                     final_stmt += parsed_else;
@@ -215,25 +209,76 @@ var consoleElements, Evaluator = {
     parse_statement: function (tokens) {
         var next_token = tokens.shift();
         var final_stmt = "";
+        var result;
         while (next_token !== undefined) {
             if (next_token.value === "if") {
-                var result = Evaluator.parse_if(tokens, 0)
+                result = Evaluator.parse_if(tokens, 0)
                 tokens = result.tokens;
                 final_stmt += result.stmt;
             }
             if (next_token.type === "number") {
                 if (tokens.length > 1) {
-                    if (tokens[1].type === "conditional_operator") {
-                        Evaluator.parse_conditional(tokens);
+                    if (tokens[0].type === "conditional_operator" || tokens[0].type === "logical_operator") {
+                        tokens.unshift(next_token);
+                        result = Evaluator.parse_conditional(tokens);
+                        tokens = result.tokens;
+                        final_stmt += result.stmt;
+                    } else if (tokens[0].type === "mathematical_operator"){
+                        tokens.unshift(next_token);
+                        Evaluator.parse_mathematical_statement(tokens);
+                    } else if (tokens[0].type === "number" || tokens[0].type === "boolean"){
+                        console.log("statement cannot be evaluated");
+                    } else {
+                        return next_token.value;
                     }
+                } else {
+                    return next_token.value;
                 }
-                return next_token.value;
             } else if (next_token.type === "boolean") {
                 return next_token.value;
             }
             next_token = tokens.shift();
             return final_stmt;
         }
+    },
+    parse_conditional: function(tokens){
+        var final_stmt = "";
+        var next_token = tokens.shift(), last_token ={};
+        while(next_token !== undefined){
+            // if(next_token.type === "number"){
+            //     final_stmt += next_token.value;
+            // } else if (next_token.type === "conditional_operator") {
+            //     var operator = next_token.value;
+            //     if(last_token.type === "number"){
+            //         next_token = tokens.shift();
+            //         if(next_token.type === "number"){
+            //             final_stmt += operator + next_token.value;
+            //         } else {
+            //             console.log("expected comparison between two numbers (first parameter)");
+            //         }
+            //     } else {
+            //         console.log("expected comparison between two numbers (second parameter)")
+            //     }
+            // } else if(next_token.type === "logical_operator") {
+
+            if (next_token.type === "keyword"){
+                break;
+            }
+            final_stmt += next_token.value;
+            // last_token = next_token;
+            next_token = tokens.shift();
+        }
+        if(typeof (eval(final_stmt)) === "boolean") {
+            return {
+                stmt: final_stmt,
+                tokens: tokens
+            }
+        } else {
+            console.log("statement is not a valid conditional");
+        }
+    },
+    parse_mathematical_statement: function(tokens) {
+
     },
     create_internal_variable: function (tokens, economy_node) {
         var variable_name = tokens.shift().value;
