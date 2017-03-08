@@ -114,6 +114,23 @@ var consoleElements, Evaluator = {
                 console.log("unknown token: " + tokens[i]);
             }
         }
+        function check_variables(ignore_first){
+            for(var i = 0; i < tokens.length; ++i){
+                if(tokens[i].type === "variable" && !ignore_first) {
+                    if (economy_node.variables.hasOwnProperty(tokens[i].value)) {
+                        var internal_variable = economy_node.variables[tokens[i].value];
+                        tokens[i].value = "environment.attributes.nodes.variables[" + internal_variable.name + "]";
+                    } else if (environment.attributes.resources.hasOwnProperty(tokens[i].value)) {
+                        var resource = environment.attributes.resources[tokens[i].value];
+                        tokens[i].value = "environment.attributes.resources[" + resource.name + "]";
+                    } else {
+                        console.log("variable " + tokens[i].value + " does not exist");
+                    }
+                }
+                ignore_first = false;
+            }
+        }
+
         tokens = Evaluator.tag_braces(tokens);
         tokens = Evaluator.tag_ifs(tokens);
         // Evaluator.print_tokens(tokens);
@@ -123,13 +140,17 @@ var consoleElements, Evaluator = {
                 var is_declaration = tokens[0].type === "VAR";
                 if (is_declaration) {
                     tokens.shift();
+                    check_variables(true);
                     console.log(Evaluator.create_internal_variable(tokens, economy_node));
                 } else {
+                    check_variables(false);
                     Evaluator.create_internal_rule(tokens, economy_node);
                 }
             } else if (rule_type === "SOURCE") {
+                check_variables(false);
                 Evaluator.create_source_rule(tokens, economy_node);
             } else if (rule_type === "SINK") {
+                check_variables(false);
                 Evaluator.create_sink_rule(tokens, economy_node);
             } else {
                 console.log("not a valid rule format");
@@ -214,7 +235,7 @@ var consoleElements, Evaluator = {
             return false;
         }
     },
-    parse_if: function (tokens, current_if_depth) {
+    parse_if: function (tokens, current_if_depth, economy_node) {
         var conditional_stmt = [], then_stmt = [], else_stmt = [];
         var stmts = [conditional_stmt, then_stmt, else_stmt];
         var stmt_iterator = 0;
@@ -224,14 +245,14 @@ var consoleElements, Evaluator = {
         while (next_token !== undefined) {
             include_token = true;
             if (next_token.value === "then" && next_token.tag === current_if_depth) {
-                var parsed_conditional = Evaluator.parse_statement(conditional_stmt);
+                var parsed_conditional = Evaluator.parse_statement(conditional_stmt, economy_node);
                 if (typeof (eval(parsed_conditional)) === "boolean") {
                     final_stmt += parsed_conditional + " ? ";
                 }
                 ++stmt_iterator;
                 include_token = false;
             } else if (next_token.value === "else" && next_token.tag === current_if_depth) {
-                var parsed_then = Evaluator.parse_statement(then_stmt);
+                var parsed_then = Evaluator.parse_statement(then_stmt, economy_node);
                 if (typeof (eval(parsed_then)) === "number" || typeof (eval(parsed_then)) === "boolean") {
                     final_stmt += parsed_then;
                 }
@@ -239,7 +260,7 @@ var consoleElements, Evaluator = {
                 ++stmt_iterator;
                 include_token = false;
             } else if (next_token.value === "endif" && next_token.tag === current_if_depth) {
-                var parsed_else = Evaluator.parse_statement(else_stmt);
+                var parsed_else = Evaluator.parse_statement(else_stmt, economy_node);
                 console.log(parsed_else);
                 if (typeof (eval(parsed_else)) === "number" || typeof (eval(parsed_else)) === "boolean") {
                     final_stmt += parsed_else;
@@ -256,23 +277,23 @@ var consoleElements, Evaluator = {
             tokens: tokens
         };
     },
-    parse_statement: function (tokens) {
+    parse_statement: function (tokens, economy_node) {
         var next_token = tokens.shift();
         var final_stmt = "";
         var result;
-        var type = "";
+        var current_type = "";
         while (next_token !== undefined) {
             if(next_token.value === "(" || next_token.value === ")"){
                 final_stmt += next_token.value;
             }
             else if (next_token.value === "if") {
-                result = Evaluator.parse_if(tokens, next_token.tag);
+                result = Evaluator.parse_if(tokens, next_token.tag, economy_node);
                 tokens = result.tokens;
                 var if_type = typeof (eval(result.stmt));
-                if(type === ""){
-                    type = if_type;
+                if(current_type === ""){
+                    current_type = if_type;
                     final_stmt += result.stmt;
-                } else if(if_type === type) {
+                } else if(if_type === current_type) {
                     final_stmt += result.stmt;
                 } else {
                     console.log("if statement returns incompatible type with outer statement")
@@ -285,15 +306,18 @@ var consoleElements, Evaluator = {
                 check_type("boolean", "incompatible value with current statement type, should be a ", next_token.value);
             } else if(next_token.type === "number"){
                 check_type("number", "incompatible value with current statement type, should be a ", next_token.value);
+            } else if(next_token.type === "variable"){
+                var variable_type = eval(next_token.value);
+                check_type(variable_type, "this variable is of type " + variable_type + " and should be of type ", next_token.value);
             }
-            function check_type(correct_type, message, value){
-                if(type === ""){
-                    type = correct_type;
+            function check_type(substatement_type, message, value){
+                if(current_type === ""){
+                    current_type = substatement_type;
                     final_stmt += value;
-                } else if(type === correct_type){
+                } else if(current_type === substatement_type){
                     final_stmt += value;
                 } else {
-                    console.log(message + correct_type);
+                    console.log(message + substatement_type);
                 }
             }
             next_token = tokens.shift();
@@ -400,7 +424,7 @@ var consoleElements, Evaluator = {
             var operator = tokens.shift();
             if (operator.type === "assignment_operator") {
                 // var next_token = tokens.shift();
-                var result = Evaluator.parse_statement(tokens);
+                var result = Evaluator.parse_statement(tokens, economy_node);
                 console.log(result);
                 console.log(eval(result));
             } else {

@@ -3,9 +3,9 @@
  */
 var environment = {
     attributes: {
-        nodes: [],
-        edges: [],
-        resources: []
+        nodes: {},
+        edges: {},
+        resources: {}
     },
     modify_resource: function(name, value){
         if(environment.attributes.hasOwnProperty(name)){
