@@ -18,26 +18,6 @@ var consoleElements, Evaluator = {
     },
     init: function () {
         consoleElements = Evaluator.elements;
-        Evaluator.tokenizer("INTERNAL damage *= if 4 > 3 && if true then true else false endif then 4 ^ 4 else 2 * 3 endif", {
-            variables: [{name: "damage"}],
-            internal_rules: []
-        });
-        Evaluator.tokenizer("INTERNAL damage *= if false then 6 else ( 2 * 3 ) ^ 4 / 6 endif ;", {
-            variables: [{name: "damage"}],
-            internal_rules: []
-        }); //REGULAR IF
-        Evaluator.tokenizer("INTERNAL damage *= if true then if true then 5 else 6 endif else 2 endif ;", {
-            variables: [{name: "damage"}],
-            internal_rules: []
-        }); //NESTED IF
-        Evaluator.tokenizer("INTERNAL damage *= if false then 6 else if false then 4 else if true then 2 else 4 endif endif endif ;", {
-            variables: [{name: "damage"}],
-            internal_rules: []
-        }); //SEQUENTIAL IF
-        Evaluator.tokenizer("INTERNAL damage *= if true then if false then 5 else if true then 6 else 3 endif endif else 2 endif ;", {
-            variables: [{name: "damage"}],
-            internal_rules: []
-        }); //NESTED IF
     },
     bind: function () {
 
@@ -90,6 +70,25 @@ var consoleElements, Evaluator = {
             return [];
         }
     },
+    tag_braces: function(tokens){
+        var brace_counter = 0;
+        var current_token = {};
+        for(var i = 0; i < tokens.length; ++i){
+            current_token = tokens[i];
+            if(current_token.value === "("){
+                current_token.tag = brace_counter;
+                ++brace_counter;
+            } else if (current_token.value === ")"){
+                --brace_counter;
+                current_token.tag = brace_counter;
+            }
+        }
+        if(brace_counter === 0){
+            return tokens;
+        } else {
+            console.log("unmatched brace pair");
+        }
+    },
     interpret_rule: function (tokens, economy_node) {
         for (var i = 0; i < tokens.length; ++i) {
             var checked_token = {};
@@ -115,6 +114,7 @@ var consoleElements, Evaluator = {
                 console.log("unknown token: " + tokens[i]);
             }
         }
+        tokens = Evaluator.tag_braces(tokens);
         tokens = Evaluator.tag_ifs(tokens);
         // Evaluator.print_tokens(tokens);
         if (tokens.length > 0) {
@@ -217,7 +217,6 @@ var consoleElements, Evaluator = {
     parse_if: function (tokens, current_if_depth) {
         var conditional_stmt = [], then_stmt = [], else_stmt = [];
         var stmts = [conditional_stmt, then_stmt, else_stmt];
-        var all_tokens = [];
         var stmt_iterator = 0;
         var final_stmt = "";
         var next_token = tokens.shift();
@@ -241,6 +240,7 @@ var consoleElements, Evaluator = {
                 include_token = false;
             } else if (next_token.value === "endif" && next_token.tag === current_if_depth) {
                 var parsed_else = Evaluator.parse_statement(else_stmt);
+                console.log(parsed_else);
                 if (typeof (eval(parsed_else)) === "number" || typeof (eval(parsed_else)) === "boolean") {
                     final_stmt += parsed_else;
                 }
@@ -260,6 +260,7 @@ var consoleElements, Evaluator = {
         var next_token = tokens.shift();
         var final_stmt = "";
         var result;
+        var type = "";
         while (next_token !== undefined) {
             if(next_token.value === "(" || next_token.value === ")"){
                 final_stmt += next_token.value;
@@ -267,60 +268,37 @@ var consoleElements, Evaluator = {
             else if (next_token.value === "if") {
                 result = Evaluator.parse_if(tokens, next_token.tag);
                 tokens = result.tokens;
-                final_stmt += result.stmt;
-                console.log(final_stmt);
-            }
-            else if (next_token.type === "number") {
-                if (tokens.length > 1) {
-                    if (tokens[0].type === "conditional_operator" || tokens[0].type === "logical_operator") {
-                        tokens.unshift(next_token);
-                        result = Evaluator.parse_to_type(tokens, "boolean");
-                        tokens = result.tokens;
-                        final_stmt += result.stmt;
-                    } else if (tokens[0].type === "mathematical_operator") {
-                        tokens.unshift(next_token);
-                        result = Evaluator.parse_to_type(tokens, "number");
-                        tokens = result.tokens;
-                        final_stmt += result.stmt;
-                    } else if (tokens[0].type === "number" || tokens[0].type === "boolean") {
-                        console.log("statement cannot be evaluated");
-                    } else {
-                        return next_token.value;
-                    }
+                var if_type = typeof (eval(result.stmt));
+                if(type === ""){
+                    type = if_type;
+                    final_stmt += result.stmt;
+                } else if(if_type === type) {
+                    final_stmt += result.stmt;
                 } else {
-                    final_stmt += next_token.value;
-                    break;
+                    console.log("if statement returns incompatible type with outer statement")
                 }
-            } else if (next_token.type === "boolean") {
-                return next_token.value;
+            } else if(next_token.type === "conditional_operator" || next_token.type === "logical_operator"){
+                check_type("boolean", "incompatible operator with current statement type, should be a ", next_token.value);
+            } else if(next_token.type === "mathematical_operator") {
+                check_type("number", "incompatible operator with current statement type, should be a ", next_token.value);
+            } else if(next_token.type === "boolean"){
+                check_type("boolean", "incompatible value with current statement type, should be a ", next_token.value);
+            } else if(next_token.type === "number"){
+                check_type("number", "incompatible value with current statement type, should be a ", next_token.value);
+            }
+            function check_type(correct_type, message, value){
+                if(type === ""){
+                    type = correct_type;
+                    final_stmt += value;
+                } else if(type === correct_type){
+                    final_stmt += value;
+                } else {
+                    console.log(message + correct_type);
+                }
             }
             next_token = tokens.shift();
         }
         return final_stmt;
-    },
-    parse_to_type: function (tokens, type) {
-        var final_stmt = "";
-        var next_token = tokens.shift();
-        while (next_token !== undefined) {
-            if (next_token.type === "keyword") {
-                if (next_token.value === "if") {
-                    var result = Evaluator.parse_if(tokens, next_token.tag);
-                    tokens = result.tokens;
-                    final_stmt += result.stmt;
-                }
-                break;
-            }
-            final_stmt += next_token.value;
-            next_token = tokens.shift();
-        }
-        if (typeof (eval(final_stmt)) === type) {
-            return {
-                stmt: final_stmt,
-                tokens: tokens
-            }
-        } else {
-            console.log("statement does not evaluate to a " + type);
-        }
     },
     create_internal_variable: function (tokens, economy_node) {
         var variable_name = tokens.shift().value;
@@ -407,8 +385,7 @@ var consoleElements, Evaluator = {
             }
             return true;
         }
-    }
-    ,
+    },
     create_internal_rule: function (tokens, economy_node) {
         var variable_name = tokens.shift().value;
         var variable_exists = false;
@@ -449,7 +426,7 @@ var consoleElements, Evaluator = {
     },
     create_sink_rule: function (tokens) {
 
-    },
+    }
 };
 
 $(document).ready(Evaluator.init());
