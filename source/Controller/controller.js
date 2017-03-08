@@ -27,5 +27,5 @@ $(document).ready(function(){
     CytoGraph.init();
     Behaviour.init();
     Graph.init();
-    RuleEditor.init();
+    Evaluator.init();
 });

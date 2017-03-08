@@ -29,9 +29,7 @@ var eles, a, Behaviour = {
         });
         $('.ui.dropdown').dropdown();
         $('.ui.modal').modal({closable: false}).modal('hide');
-        $('.ui.modal').modal("setting", {
-            onVisible: RuleEditor.onresize
-        });
+        $('.ui.modal').modal("setting", {});
         $('.ui.sidebar').sidebar({
             transition: 'overlay',
             dimPage: false,
