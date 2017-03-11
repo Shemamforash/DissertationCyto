@@ -10,15 +10,15 @@ var cy, CyA, CyB, CytoGraph = {
         select_node: function (event) {
             var target = event.cyTarget;
             if (target !== cy) {
-                CyA.current_node_element = target;
-                Graph.nodes.set_current_node(target.id);
+                CyA.current_node = target;
+                Behaviour.update_node_sidebar();
             }
         },
         change_or_move_node: function (event) {
             if (CyA.current_node_element) {
                 Graph.nodes.update_position(CyA.current_node_element);
             }
-            if(event.cyTarget !== CyA.current_node_element){
+            if (event.cyTarget === cy || event.cyTarget.group() !== "nodes") {
                 Behaviour.toggleNodeSidebar(false);
             } else {
                 cy.nodes().deselect();
@@ -31,20 +31,21 @@ var cy, CyA, CyB, CytoGraph = {
             if (CyA.current_node_element) {
                 if (target !== CyA.current_node_element) {
                     Behaviour.toggleNodeSidebar(true);
-                    if (Graph.edges.add(CyA.current_node_element.id(), target.id())) {
-                        cy.add({
-                            group: "edges",
-                            data: {
-                                source: CyA.current_node_element.id(),
-                                target: target.id()
-                            }
-                        });
+                    var new_edge = cy.add({
+                        group: "edges",
+                        data: {
+                            source: CyA.current_node.id(),
+                            target: target.id()
+                        }
+                    });
+                    if (!Graph.edges.add(new_edge)) {
+                        cy.remove(new_edge);
                     }
                 }
             }
         }
     },
-    init: function(){
+    init: function () {
         CyA = CytoGraph.attributes;
         CyB = CytoGraph.behaviour;
         cy = cytoscape({
@@ -66,7 +67,7 @@ var cy, CyA, CyB, CytoGraph = {
         });
         CytoGraph.bind();
     },
-    bind: function(){
+    bind: function () {
         //start click
         cy.on('tapstart', CyB.select_node);
         //end click
@@ -74,18 +75,21 @@ var cy, CyA, CyB, CytoGraph = {
         //right click
         cy.on('cxttap', 'node', CyB.link_nodes);
     },
-    add_node: function(event){
+    add_node: function (event) {
         var snap_position = CytoGraph.mouse_to_world_coordinates(event.x, event.y);
         var new_node = cy.add({
             group: "nodes",
-            data: {label: "new node"},
+            data: {
+                label: "Node" + n.node_number,
+                id: "Node" + n.node_number
+            },
             position: {x: snap_position.x, y: snap_position.y}
         });
-        if (!Graph.nodes.add(new_node.id(), new_node.position().x, new_node.position().y)) {
+        if (!Graph.nodes.add(new_node)) {
             cy.remove(new_node);
         }
     },
-    clamp_viewport: function(){
+    clamp_viewport: function () {
         var viewport = cy.extent();
         var bound = cy.elements().boundingBox();
 
@@ -99,7 +103,7 @@ var cy, CyA, CyB, CytoGraph = {
             });
         }
     },
-    mouse_to_world_coordinates: function(x, y){
+    mouse_to_world_coordinates: function (x, y) {
         var zoom = cy.zoom();
         x = x / zoom + cy.extent().x1;
         y = y / zoom + cy.extent().y1;

@@ -1,34 +1,32 @@
 /**
  * Created by Sam on 20/01/2017.
  */
-var e, n, t, Graph = {
+var e, n, r, Graph = {
     init: function () {
         e = Graph.edges;
         n = Graph.nodes;
-        t = Graph.tags;
+        r = Graph.resources;
     },
     edges: {
         edge_list: [],
-        create_edge: function (origin, end) {
-            return {
-                origin: origin,
-                end: end
-            };
-        },
-        add: function (origin, end) {
+        add: function (edge) {
+            var source = edge.source().id();
+            var target = edge.target().id();
             for (var i = 0; i < e.edge_list.length; ++i) {
-                var edge = e.edge_list[i];
-                if ((edge.origin === origin && edge.end === end) || (edge.end === origin && edge.origin === end)) {
+                var existing_edge = e.edge_list[i];
+                var edge_source = existing_edge.source().id();
+                var edge_target = existing_edge.target().id()
+                if ((edge_source === source && edge_target === target) || (edge_target === source && edge_source === target)) {
                     return false;
                 }
             }
-            e.edge_list.push(e.create_edge(origin, end));
+            e.edge_list.push(edge);
             return true;
         }
     },
     nodes: {
+        node_number: 0,
         node_list: {},
-        current_node: {},
         create_node: function (id, x, y) {
             return {
                 id: id,
@@ -37,9 +35,6 @@ var e, n, t, Graph = {
                 rules: [],
                 variables: []
             };
-        },
-        set_current_node: function(id){
-            n.current_node = n.node_list[id];
         },
         create_rule: function (rule_id, code, xml_blocks) {
             var graph_node = n.node_list[CyA.current_node_element.id()];
@@ -94,11 +89,17 @@ var e, n, t, Graph = {
             }
             return false;
         },
-        add: function (id, x, y) {
+        add: function (cy_node) {
+            var x = cy_node.position().x;
+            var y = cy_node.position().y;
+            var id = cy_node.id();
             if (n.node_overlaps(x, y, id)) {
                 return false;
             }
-            n.node_list[id] = n.create_node(id, x, y);
+            n.node_number++;
+            cy_node.variables = [];
+            cy_node.rules = [];
+            n.node_list[id] = cy_node;
             return true;
         },
         update_position: function (node) {
@@ -110,45 +111,39 @@ var e, n, t, Graph = {
                 graph_node.x = node.position().x;
                 graph_node.y = node.position().y;
             }
-        },
-        update_property: function (node, prop, val) {
-            var graph_node = n.node_list[node.id()];
-            if (graph_node.hasOwnProperty(prop)) {
-                graph_node[prop] = val;
-            }
         }
     },
-    //Manages the current list of tags in the system
+    //Manages the current list of resources in the system
     //Tags must be unique and can only be declared in the graph sidebar
-    tags: {
-        tag_list: [],
-        exists: function (tag_name) {
-            i = t.tag_list.indexOf(tag_name);
-            return i == -1 ? null : t.tag_list[i];
+    resources: {
+        resource_list: [],
+        exists: function (resource_name) {
+            var i = r.resource_list.indexOf(resource_name);
+            return i == -1 ? null : t.resource_list[i];
         },
         //Returns false if a tag with the given name already exists
         //Tags are pairs of a name and an element corresponding to the element in the graph sidebar
-        update: function (element_id, tag_name) {
-            if (t.exists(tag_name)) {
-                if (tag_name === element_id) {
+        update: function (element_id, resource_name) {
+            if (r.exists(resource_name)) {
+                if (resource_name === element_id) {
                     return true;
                 } else {
                     return false;
                 }
             } else {
-                if (tag_name !== "") {
-                    t.tag_list.push(tag_name);
+                if (resource_name !== "") {
+                    r.resource_list.push(resource_name);
                 }
-                t.tag_list.splice(t.tag_list.indexOf(element_id), 1);
+                r.resource_list.splice(r.resource_list.indexOf(element_id), 1);
                 return true;
             }
         },
         //Returns false if no tag found
         //Otherwise removes the tag and returns true
-        remove: function (tag_name) {
-            var tag = t.exists(tag_name);
-            if (tag) {
-                t.tag_list.splice(t.tag_list.indexOf(tag), 1);
+        remove: function (resource_name) {
+            var resource = r.exists(resource_name);
+            if (resource) {
+                r.resource_list.splice(r.resource_list.indexOf(resource), 1);
                 return true;
             }
             return false;

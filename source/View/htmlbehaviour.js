@@ -12,7 +12,8 @@ var eles, a, Behaviour = {
             sidebar_opener: $('#sidebar_opener'),
             tag_editor: $('#tag_editor'),
             rules_editor: $('#rules_modal'),
-            rules_editor_opener: $('#add_rule')
+            rules_editor_opener: $('#add_rule'),
+            node_name_input: $('#node_name_input')
         }
     },
     attributes: {
@@ -30,6 +31,12 @@ var eles, a, Behaviour = {
         $('.ui.dropdown').dropdown();
         $('.ui.modal').modal({closable: false}).modal('hide');
         $('.ui.sidebar').sidebar({
+            transition: 'overlay',
+            dimPage: false,
+            exclusive: true,
+        });
+        eles.node_sidebar.sidebar({
+            closable: false,
             transition: 'overlay',
             dimPage: false,
             exclusive: true
@@ -57,6 +64,7 @@ var eles, a, Behaviour = {
         $('#accept_rule').click(function(){
             Behaviour.rule_editor.accept_rule();
         })
+        eles.node_name_input.on("input", Behaviour.changeNodeLabel());
     },
 
     rule_editor: {
@@ -100,6 +108,9 @@ var eles, a, Behaviour = {
         }
     },
 
+    update_node_sidebar: function(){
+        
+    },
 
     addTag: function () {
         var element = $('<div class="ui input inverted transparent tag_edit right labelled">' +
@@ -142,7 +153,7 @@ var eles, a, Behaviour = {
 
         var tag_name = $(element).find('input').val();
         var old_name = $(element).attr("id");
-        if (Graph.tags.update($(element).attr("id"), tag_name)) {
+        if (Graph.resources.update($(element).attr("id"), tag_name)) {
             $(element).attr("id", tag_name);
         } else {
             $(element).find('input').val(old_name);
@@ -152,7 +163,7 @@ var eles, a, Behaviour = {
     delete_tag: function (element) {
         var tag_name = $(element).attr("id");
         if (tag_name !== "") {
-            if (!Graph.tags.remove(tag_name)) {
+            if (!Graph.resources.remove(tag_name)) {
                 console.log("Tag did not exist for some reason..." + tag_name);
             } else {
                 $(element).remove();
@@ -185,7 +196,7 @@ var eles, a, Behaviour = {
         }
     },
 
-    changeNodeLabel: function (text) {
-        CyA.current_node_element.data('label', text);
+    changeNodeLabel: function () {
+        CyA.current_node.data('label', eles.node_name_input.val());
     }
 };
