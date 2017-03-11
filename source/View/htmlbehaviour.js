@@ -64,7 +64,7 @@ var eles, a, Behaviour = {
         $('#accept_rule').click(function(){
             Behaviour.rule_editor.accept_rule();
         })
-        eles.node_name_input.on("input", Behaviour.changeNodeLabel());
+        eles.node_name_input.on("input", Behaviour.changeNodeLabel);
     },
 
     rule_editor: {
@@ -74,8 +74,7 @@ var eles, a, Behaviour = {
                 var code = $('#code_textarea').val();
                 var rule_name = $('#rule_name_input').val();
                 var rule_button = $('<button class="ui button red rule fluid"></button>');
-                console.log(CyA.current_node_element);
-                var result = Evaluator.tokenizer(code, Graph.nodes.current_node);
+                var result = Evaluator.tokenizer(code, CyA.current_node);
                 $('#error_message').text(result);
 
                 Behaviour.rule_editor.current_rule = null;

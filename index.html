@@ -52,11 +52,7 @@
     </div>
 
     <!--<div class="ui fluid accordion">-->
-<<<<<<< HEAD
     <!--<div class="ui title inverted icon" style="height: 30px"><i class="icon tags inverted green"></i>Tags</div>-->
-=======
-    <!--<div class="ui title inverted icon" style="height: 30px"><i class="icon resources inverted green"></i>Tags</div>-->
->>>>>>> origin/master
     <!--<div class="content inverted">-->
     <!--<div class="ui dropdown fluid labeled icon button inverted">-->
     <!--<div class="text">Add Tag</div>-->
@@ -73,29 +69,19 @@
 </div>
 
 <!--modal window to add/edit rule, uses blockly-->
-<div class="ui modal" id="rules_modal">
-    <div class="ui grid" style="height: 50px; margin: 0px; padding: 0px;">
-        <div class="ten wide column">
-            <!--<div class="ui header green center aligned">Edit Rule</div>-->
-            <div class="ui disabled input inverted center aligned green header nine wide">
-                <input class="ui title green h1 nine wide" style="height: 30px" type="text" placeholder="Name"
+<div class="ui modal" id="rules_modal" style="padding: 5px;">
+    <div class="ui secondary menu" style="height: 50px; margin: 0px; padding: 5px;">
+        <div class="item" style="width: calc(100% - 150px); margin: 0px;">
+            <div class="ui input inverted green header">
+                <input class="ui title green h1" style="height: 30px" type="text" placeholder="Name"
                        oninput="Behaviour.rule_editor.change_rule_name(this.value)" id="rule_name_input">
-                <div class="ui icon button inverted right attached one wide" id="edit_rule_name">
-                    <i class="edit icon button"></i>
-                </div>
             </div>
         </div>
-        <div class="six wide column middle aligned">
-            <div class="ui buttons two column grid fluid">
-                <button class="ui button inverted red icon" id="cancel_rule_button">
-                    Cancel
-                    <i class="icon remove"></i>
-                </button>
-                <button class="ui button inverted green icon" id="accept_rule_button">
-                    Done
-                    <i class="icon checkmark"></i>
-                </button>
-            </div>
+        <div class="item" style="width:150px; margin: 0px;">
+            <button class="ui fluid button inverted red icon" id="cancel_rule_button">
+                Cancel
+                <i class="icon remove"></i>
+            </button>
         </div>
     </div>
     <div class="segment fluid" style="height: calc(100% - 50px); width: 100%;">

@@ -4,19 +4,19 @@
 
 var cy, CyA, CyB, CytoGraph = {
     attributes: {
-        current_node_element: null
+        current_node: null
     },
     behaviour: {
         select_node: function (event) {
             var target = event.cyTarget;
             if (target !== cy) {
-                CyA.current_node = target;
+                CyA.current_node = n.node_list[target.id()];
                 Behaviour.update_node_sidebar();
             }
         },
         change_or_move_node: function (event) {
-            if (CyA.current_node_element) {
-                Graph.nodes.update_position(CyA.current_node_element);
+            if (CyA.current_node) {
+                Graph.nodes.update_position(CyA.current_node);
             }
             if (event.cyTarget === cy || event.cyTarget.group() !== "nodes") {
                 Behaviour.toggleNodeSidebar(false);
@@ -28,8 +28,8 @@ var cy, CyA, CyB, CytoGraph = {
         },
         link_nodes: function (event) {
             var target = event.cyTarget;
-            if (CyA.current_node_element) {
-                if (target !== CyA.current_node_element) {
+            if (CyA.current_node) {
+                if (target !== CyA.current_node) {
                     Behaviour.toggleNodeSidebar(true);
                     var new_edge = cy.add({
                         group: "edges",
@@ -83,7 +83,7 @@ var cy, CyA, CyB, CytoGraph = {
                 label: "Node" + n.node_number,
                 id: "Node" + n.node_number
             },
-            position: {x: snap_position.x, y: snap_position.y}
+            position: {x: snap_position.x, y: snap_position.y},
         });
         if (!Graph.nodes.add(new_node)) {
             cy.remove(new_node);

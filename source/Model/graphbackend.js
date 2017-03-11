@@ -12,13 +12,17 @@ var e, n, r, Graph = {
         add: function (edge) {
             var source = edge.source().id();
             var target = edge.target().id();
+            console.log("Desired edge: " + source + " ::::: " + target);
             for (var i = 0; i < e.edge_list.length; ++i) {
                 var existing_edge = e.edge_list[i];
                 var edge_source = existing_edge.source().id();
                 var edge_target = existing_edge.target().id()
+                console.log("Existing edge: " + edge_source + " ::::: " + edge_target);
                 if ((edge_source === source && edge_target === target) || (edge_target === source && edge_source === target)) {
+                    console.log("exists");
                     return false;
                 }
+                console.log("     ");
             }
             e.edge_list.push(edge);
             return true;
@@ -27,17 +31,8 @@ var e, n, r, Graph = {
     nodes: {
         node_number: 0,
         node_list: {},
-        create_node: function (id, x, y) {
-            return {
-                id: id,
-                x: x,
-                y: y,
-                rules: [],
-                variables: []
-            };
-        },
         create_rule: function (rule_id, code, xml_blocks) {
-            var graph_node = n.node_list[CyA.current_node_element.id()];
+            var graph_node = n.node_list[CyA.current_node.id()];
             var current_rule = null;
             if (graph_node) {
                 if (rule_id === "") {
@@ -58,7 +53,7 @@ var e, n, r, Graph = {
             rule.id = new_id;
         },
         edit_rule: function (rule_id, code, xml_blocks) {
-            var graph_node = n.node_list[CyA.current_node_element.id()];
+            var graph_node = n.node_list[CyA.current_node.id()];
             if (graph_node) {
                 for (var i = 0; i < graph_node.rules.length; ++i) {
                     var current_rule = graph_node.rules[i];
@@ -70,7 +65,7 @@ var e, n, r, Graph = {
             }
         },
         delete_rule: function (rule_id) {
-            var graph_node = n.node_list[CyA.current_node_element];
+            var graph_node = n.node_list[CyA.current_node];
             if (graph_node) {
                 for (var i = 0; i < graph_node.rules.length; ++i) {
                     var current_rule = graph_node.rules[i];
@@ -97,8 +92,8 @@ var e, n, r, Graph = {
                 return false;
             }
             n.node_number++;
-            cy_node.variables = [];
-            cy_node.rules = [];
+            cy_node.variables = {};
+            cy_node.rules = {};
             n.node_list[id] = cy_node;
             return true;
         },

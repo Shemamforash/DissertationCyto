@@ -19,9 +19,6 @@ var consoleElements, Evaluator = {
     init: function () {
         consoleElements = Evaluator.elements;
     },
-    bind: function () {
-
-    },
     tokenizer: function (input, economy_node) {
         var i, rules;
         input.replace(/\r?\n|\r/, " ");
@@ -38,6 +35,7 @@ var consoleElements, Evaluator = {
             rules[i] = rules[i].split(" ");
             var interpretation_result = Evaluator.interpret_rule(rules[i], economy_node);
             if (interpretation_result !== true) {
+                console.log("interpretation failed " + interpretation_result);
                 return interpretation_result;
             }
         }
@@ -175,10 +173,10 @@ var consoleElements, Evaluator = {
             if (tokens[i].type === "variable" && !ignore_first) {
                 if (economy_node.variables.hasOwnProperty(tokens[i].value)) {
                     internal_variable = economy_node.variables[tokens[i].value];
-                    tokens[i].value = "environment.attributes.nodes.variables[" + internal_variable.name + "]";
+                    tokens[i].value = "n.node_list['" + economy_node.id() + "'].variables['" + internal_variable.name + "'].current_value";
                 } else if (environment.attributes.resources.hasOwnProperty(tokens[i].value)) {
                     resource = environment.attributes.resources[tokens[i].value];
-                    tokens[i].value = "environment.attributes.resources[" + resource.name + "]";
+                    tokens[i].value = "environment.attributes.resources['" + resource.name + "']";
                 } else {
                     return "variable " + tokens[i].value + " does not exist";
                 }
@@ -276,6 +274,7 @@ var consoleElements, Evaluator = {
             include_token = true;
             if (next_token.value === "then" && next_token.tag === current_if_depth) {
                 var parsed_conditional = Evaluator.parse_statement(conditional_stmt, economy_node);
+                console.log(parsed_conditional);
                 if (typeof (eval(parsed_conditional)) === "boolean") {
                     final_stmt += parsed_conditional + " ? ";
                 }
@@ -330,22 +329,23 @@ var consoleElements, Evaluator = {
                     return "if statement returns incompatible type with outer statement";
                 }
             } else if (next_token.type === "conditional_operator" || next_token.type === "logical_operator") {
-                type_check_result = check_type("boolean", "incompatible operator with current statement type, should be a ", next_token.value);
+                type_check_result = check_type("boolean", "332 incompatible operator with current statement type, should be a ", next_token.value);
                 if (type_check_result !== true) {
                     return type_check_result;
                 }
             } else if (next_token.type === "mathematical_operator") {
-                type_check_result = check_type("number", "incompatible operator with current statement type, should be a ", next_token.value);
+                type_check_result = check_type("number", "337 incompatible operator with current statement type, should be a ", next_token.value);
                 if (type_check_result !== true) {
                     return type_check_result;
                 }
             } else if (next_token.type === "boolean") {
-                type_check_result = check_type("boolean", "incompatible value with current statement type, should be a ", next_token.value);
+                type_check_result = check_type("boolean", "342 incompatible value with current statement type, should be a ", next_token.value);
                 if (type_check_result !== true) {
                     return type_check_result;
                 }
             } else if (next_token.type === "number") {
-                type_check_result = check_type("number", "incompatible value with current statement type, should be a ", next_token.value);
+                type_check_result = check_type("number", "347 incompatible value with current statement type, should be a ", next_token.value);
+                console.log(type_check_result);
                 if (type_check_result !== true) {
                     return type_check_result;
                 }
@@ -368,8 +368,10 @@ var consoleElements, Evaluator = {
                 return true;
             }
 
+            console.log(next_token);
             next_token = tokens.shift();
         }
+        console.log(final_stmt);
         return final_stmt;
     },
     create_internal_variable: function (tokens, economy_node) {
@@ -379,7 +381,7 @@ var consoleElements, Evaluator = {
                 return "variable '" + variable_name + "' already exists on this node";
             }
         }
-        if (tokens.shift().type !== "=") {
+        if (tokens.shift().value !== "=") {
             return "initial value assignment syntax error";
         }
         var initial_value = tokens.shift();
@@ -416,15 +418,16 @@ var consoleElements, Evaluator = {
 
         var new_variable = {
             name: variable_name,
+            current_value: initial_value,
             initial_value: initial_value,
             max_value: max_value,
             min_value: min_value,
             reset_value: reset_value
         };
 
-        economy_node.variables.push(new_variable);
+        economy_node.variables[variable_name] = new_variable;
 
-        return "initialized new variable '" + variable_name + "'";
+        return true;
 
         function check_valid_assignment(i) {
             if (tokens[i + 1].type !== "=") {
@@ -441,33 +444,32 @@ var consoleElements, Evaluator = {
         var variable_name = tokens.shift().value;
         var variable_exists = false;
         //check for variable existence;
-        //TODO REMOVE ME
-        economy_node.variables = {};
-        for (var i = 0; i < economy_node.variables.length; ++i) {
-            if (economy_node.variables[i].name === variable_name) {
-                variable_exists = true;
-            }
-        }
-        if (variable_exists) {
-            var stmt = "";
-            var operator = tokens.shift();
-            if (operator.type === "assignment_operator") {
-                // var next_token = tokens.shift();
-                var result = Evaluator.parse_statement(tokens, economy_node);
-                console.log(result);
-                console.log(eval(result));
-            } else {
-                return "expecting assignment operator";
-            }
-
-            var next_token = tokens.shift();
-
-
-            economy_node.internal_rules.push({});
+        // if (economy_node.variables.hasOwnProperty(variable_name)) {
+        //     variable_exists = true;
+        // }
+        // if (variable_exists) {
+        var stmt = variable_name;
+        var operator = tokens.shift();
+        if (operator.type === "assignment_operator") {
+            // var next_token = tokens.shift();
+            stmt += " " + operator.value;
+            var result = Evaluator.parse_statement(tokens, economy_node);
+            stmt += " " + result;
+            console.log(stmt);
+            console.log(eval(stmt));
         } else {
-            return "variable '" + variable_name + "' referenced but does not exist on this node";
+            return "expecting assignment operator";
         }
-        return "successfully initialised new variable";
+
+        var next_token = tokens.shift();
+
+
+        // economy_node.internal_rules.push({});
+        // } else {
+        //     return "variable '" + variable_name + "' referenced but does not exist on this node";
+        // }
+        // return "successfully initialised new variable";
+        return true;
     },
     create_source_rule: function (tokens) {
 

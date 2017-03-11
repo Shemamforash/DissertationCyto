@@ -15,7 +15,7 @@ var Controller = {
             cy.add({
                 group: "edges",
                 data: {
-                    source: CyA.current_node_element.get().id(),
+                    source: CyA.current_node.get().id(),
                     target: target.id()
                 }
             });
