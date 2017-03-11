@@ -51,19 +51,19 @@
     </div>
 
     <!--<div class="ui fluid accordion">-->
-        <!--<div class="ui title inverted icon" style="height: 30px"><i class="icon tags inverted green"></i>Tags</div>-->
-        <!--<div class="content inverted">-->
-            <!--<div class="ui dropdown fluid labeled icon button inverted">-->
-                <!--<div class="text">Add Tag</div>-->
-                <!--<i class="plus icon inverted white"></i>-->
-                <!--<div class="menu inverted" id="tag_dropdown">-->
-                <!--</div>-->
-            <!--</div>-->
-        <!--</div>-->
-        <div class="ui button inverted white icon fluid" id="add_rule">
-            Rules
-            <i class="icon plus"></i>
-        </div>
+    <!--<div class="ui title inverted icon" style="height: 30px"><i class="icon tags inverted green"></i>Tags</div>-->
+    <!--<div class="content inverted">-->
+    <!--<div class="ui dropdown fluid labeled icon button inverted">-->
+    <!--<div class="text">Add Tag</div>-->
+    <!--<i class="plus icon inverted white"></i>-->
+    <!--<div class="menu inverted" id="tag_dropdown">-->
+    <!--</div>-->
+    <!--</div>-->
+    <!--</div>-->
+    <div class="ui button inverted white icon fluid" id="add_rule">
+        Rules
+        <i class="icon plus"></i>
+    </div>
     <!--</div>-->
 </div>
 
@@ -92,21 +92,12 @@
             </div>
         </div>
     </div>
-
-    <div id="blockly_area">
-        <div id="blockly_div"></div>
+    <div class="segment fluid" style="height: calc(100% - 50px); width: 100%;">
+        <textarea id="code_textarea" style="width: 100%; height: 80%; resize: none;"></textarea>
+        <div id="error_message" style="width: 100%; height: 10%;">No Errors</div>
+        <div class="ui button green" id="accept_rule" style="width: 100%; height: 10%">Save Rules</div>
     </div>
 
-    <xml id="toolbox" style="display: none">
-        <block type="controls_if"></block>
-        <block type="controls_repeat_ext"></block>
-        <block type="logic_compare"></block>
-        <block type="math_number"></block>
-        <block type="math_arithmetic"></block>
-        <block type="text"></block>
-        <block type="text_print"></block>
-        <block type="toggle_bool"></block>
-    </xml>
 </div>
 
 <!--cytoscape-->

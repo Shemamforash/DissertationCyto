@@ -15,7 +15,7 @@ var Controller = {
             cy.add({
                 group: "edges",
                 data: {
-                    source: CyA.current_node.get().id(),
+                    source: CyA.current_node_element.get().id(),
                     target: target.id()
                 }
             });
@@ -27,5 +27,5 @@ $(document).ready(function(){
     CytoGraph.init();
     Behaviour.init();
     Graph.init();
-    RuleEditor.init();
+    Evaluator.init();
 });

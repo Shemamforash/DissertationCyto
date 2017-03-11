@@ -29,9 +29,6 @@ var eles, a, Behaviour = {
         });
         $('.ui.dropdown').dropdown();
         $('.ui.modal').modal({closable: false}).modal('hide');
-        $('.ui.modal').modal("setting", {
-            onVisible: RuleEditor.onresize
-        });
         $('.ui.sidebar').sidebar({
             transition: 'overlay',
             dimPage: false,
@@ -57,31 +54,24 @@ var eles, a, Behaviour = {
         $('#accept_rule_button').click(function () {
             Behaviour.rule_editor.accept_rule();
         });
+        $('#accept_rule').click(function(){
+            Behaviour.rule_editor.accept_rule();
+        })
     },
 
     rule_editor: {
         current_rule: null,
         accept_rule: function () {
             if ($('.ui.dimmer.modals').first().hasClass("active") && !$('.ui.dimmer.modals').first().hasClass("animating")) {
-                var code = Blockly.JavaScript.workspaceToCode(workspace);
-                var blocks = Blockly.Xml.workspaceToDom(workspace);
-                var xml_string = Blockly.Xml.domToText(blocks);
+                var code = $('#code_textarea').val();
                 var rule_name = $('#rule_name_input').val();
                 var rule_button = $('<button class="ui button red rule fluid"></button>');
-                var new_rule = {};
-
-                if (Behaviour.rule_editor.current_rule === null) {
-                    new_rule = Graph.nodes.create_rule(rule_name, code, xml_string);
-                    rule_button.text(new_rule.id);
-                    $('#add_rule').before(rule_button);
-                    rule_button.bind('click', new_rule, Behaviour.rule_editor.edit_rule);
-                } else {
-                    Graph.nodes.edit_rule(rule_name, code, xml_string);
-                }
+                console.log(CyA.current_node_element);
+                var result = Evaluator.tokenizer(code, Graph.nodes.current_node);
+                $('#error_message').text(result);
 
                 Behaviour.rule_editor.current_rule = null;
-                $('.ui.modal').modal('hide');
-                workspace.clear();
+                // $('.ui.modal').modal('hide');
             }
         },
 
@@ -196,6 +186,6 @@ var eles, a, Behaviour = {
     },
 
     changeNodeLabel: function (text) {
-        CyA.current_node.data('label', text);
+        CyA.current_node_element.data('label', text);
     }
 };

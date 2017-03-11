@@ -28,16 +28,21 @@ var e, n, t, Graph = {
     },
     nodes: {
         node_list: {},
+        current_node: {},
         create_node: function (id, x, y) {
             return {
                 id: id,
                 x: x,
                 y: y,
-                rules: []
+                rules: [],
+                variables: []
             };
         },
+        set_current_node: function(id){
+            n.current_node = n.node_list[id];
+        },
         create_rule: function (rule_id, code, xml_blocks) {
-            var graph_node = n.node_list[CyA.current_node.id()];
+            var graph_node = n.node_list[CyA.current_node_element.id()];
             var current_rule = null;
             if (graph_node) {
                 if (rule_id === "") {
@@ -58,7 +63,7 @@ var e, n, t, Graph = {
             rule.id = new_id;
         },
         edit_rule: function (rule_id, code, xml_blocks) {
-            var graph_node = n.node_list[CyA.current_node.id()];
+            var graph_node = n.node_list[CyA.current_node_element.id()];
             if (graph_node) {
                 for (var i = 0; i < graph_node.rules.length; ++i) {
                     var current_rule = graph_node.rules[i];
@@ -70,7 +75,7 @@ var e, n, t, Graph = {
             }
         },
         delete_rule: function (rule_id) {
-            var graph_node = n.node_list[CyA.current_node];
+            var graph_node = n.node_list[CyA.current_node_element];
             if (graph_node) {
                 for (var i = 0; i < graph_node.rules.length; ++i) {
                     var current_rule = graph_node.rules[i];
