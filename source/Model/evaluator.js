@@ -14,13 +14,15 @@ var consoleElements, Evaluator = {
         assignment_operators: ["*=", "+=", "-=", "/=", "^=", "++", "--", "="],
         mathematical_operators: ["+", "-", "*", "/", "%", "^"],
         input: "",
-        button: {}
+        button: {},
+        original_variable_values: []
     },
     init: function () {
         consoleElements = Evaluator.elements;
     },
     tokenizer: function (input, economy_node) {
         var i, rules;
+        consoleElements.original_variable_values = [];
         input.replace(/\r?\n|\r/, " ");
         rules = input.split(";");
         if (input.trim() === "") {
@@ -33,8 +35,13 @@ var consoleElements, Evaluator = {
             rules[i] = rules[i].trim();
             rules[i] = rules[i].split(" ");
             var interpretation_result = Evaluator.interpret_rule(rules[i], economy_node);
+            Evaluator.reset_variable_values();
             if (interpretation_result.message_type === "error") {
                 return interpretation_result.message;
+            } else {
+                console.log(interpretation_result.message);
+                console.log(eval(interpretation_result.message));
+                console.log(n.node_list["Node0"].variables["hello"].current_value);
             }
         }
         return "all rules ok";
@@ -170,15 +177,21 @@ var consoleElements, Evaluator = {
         var internal_variable, resource, i;
         for (i = 0; i < tokens.length; ++i) {
             if (tokens[i].type === "variable" && !ignore_first) {
+                var variable_reference;
                 if (economy_node.variables.hasOwnProperty(tokens[i].value)) {
                     internal_variable = economy_node.variables[tokens[i].value];
+                    variable_reference = "n.node_list['" + economy_node.id() + "'].variables['" + internal_variable.name + "'].current_value = " + internal_variable.current_value;
                     tokens[i].value = "n.node_list['" + economy_node.id() + "'].variables['" + internal_variable.name + "'].current_value";
+                    tokens[i].temp_value = eval(tokens[i].value);
                 } else if (environment.attributes.resources.hasOwnProperty(tokens[i].value)) {
                     resource = environment.attributes.resources[tokens[i].value];
+                    variable_reference = "environment.attributes.resources['" + resource.name + "'] = " + resource.value;
                     tokens[i].value = "environment.attributes.resources['" + resource.name + "']";
+                    tokens[i].temp_value = eval(tokens[i].value);
                 } else {
                     return Evaluator.wrap_message("error", "variable " + tokens[i].value + " does not exist");
                 }
+                consoleElements.original_variable_values.push(variable_reference);
             }
             ignore_first = false;
         }
@@ -262,13 +275,14 @@ var consoleElements, Evaluator = {
             return false;
         }
     },
-    parse_if: function (tokens, current_if_depth, economy_node) {
+    parse_if: function (tokens, current_if_depth, economy_node, expected_type) {
         var conditional_stmt = [], then_stmt = [], else_stmt = [];
         var stmts = [conditional_stmt, then_stmt, else_stmt];
         var stmt_iterator = 0;
         var final_stmt = "";
         var next_token = tokens.shift();
         var include_token;
+        var if_type = undefined;
         while (next_token !== undefined) {
             include_token = true;
 
@@ -278,7 +292,8 @@ var consoleElements, Evaluator = {
                     return parse_result;
                 } else {
                     var parsed_conditional = parse_result.message;
-                    if (typeof (eval(parsed_conditional)) === "boolean") {
+                    var block_type = typeof (eval(parsed_conditional));
+                    if (block_type === "boolean") {
                         final_stmt += parsed_conditional + " ? ";
                     } else {
                         return Evaluator.wrap_message("error", "if conditional block does not evaluate to boolean " + parsed_conditional);
@@ -288,13 +303,14 @@ var consoleElements, Evaluator = {
                 }
             }
             else if (next_token.value === "else" && next_token.tag === current_if_depth) {
-                var parse_result = Evaluator.parse_statement(then_stmt, economy_node);
+                var parse_result = Evaluator.parse_statement(then_stmt, economy_node, expected_type);
                 if(parse_result.message_type === "error"){
                     return parse_result;
                 } else {
                     var parsed_then = parse_result.message;
-                    console.log(eval(parse_result.message));
-                    if (typeof (eval(parsed_then)) === "number" || typeof (eval(parsed_then)) === "boolean" || typeof (eval(parsed_then)) === "undefined") {
+                    var block_type = typeof (eval(parsed_then));
+                    if_type = block_type;
+                    if (block_type === "number" || block_type === "boolean" || block_type === "undefined") {
                         final_stmt += parsed_then + " : ";
                     } else {
                         return Evaluator.wrap_message("error", "then statement block does not evaluate to desired type (number, boolean, none) " + parsed_then);
@@ -304,12 +320,16 @@ var consoleElements, Evaluator = {
                 }
             }
             else if (next_token.value === "endif" && next_token.tag === current_if_depth) {
-                var parse_result = Evaluator.parse_statement(else_stmt, economy_node);
+                var parse_result = Evaluator.parse_statement(else_stmt, economy_node, expected_type);
                 if(parse_result.message_type === "error"){
                     return parse_result;
                 } else {
                     var parsed_else = parse_result.message;
-                    if (typeof (eval(parsed_else)) === "number" || typeof (eval(parsed_else)) === "boolean" || typeof(eval(parsed_else)) === "undefined") {
+                    var block_type = typeof (eval(parsed_else));
+                    if(block_type !== if_type){
+                        return Evaluator.wrap_message("error", "if blocks do not have the same return value type");
+                    }
+                    if (block_type === "number" || block_type === "boolean" || block_type === "undefined") {
                         final_stmt += parsed_else;
                     } else {
                         return Evaluator.wrap_message("error", "else statement block does not evaluate to desired type (number, boolean, none) " + parsed_else);
@@ -324,7 +344,8 @@ var consoleElements, Evaluator = {
         }
         return Evaluator.wrap_message("success", {
             stmt: "(" + final_stmt + ")",
-            tokens: tokens
+            tokens: tokens,
+            if_type: if_type
         });
     },
     wrap_message: function(type, message){
@@ -344,16 +365,16 @@ var consoleElements, Evaluator = {
                 final_stmt += next_token.value;
             }
             else if (next_token.value === "if") {
-                result = Evaluator.parse_if(tokens, next_token.tag, economy_node);
+                result = Evaluator.parse_if(tokens, next_token.tag, economy_node, expected_type);
                 if (result.message_type === "error") {
                     return result;
                 }
                 tokens = result.message.tokens;
-                var if_type = typeof (eval(result.message.stmt));
-                if (if_type === expected_type) {
+                var if_type = result.message.if_type;
+                if (if_type === expected_type || expected_type === "anything") {
                     final_stmt += result.message.stmt;
                 } else {
-                    return Evaluator.wrap_message("error", "if statement returns incompatible type with outer statement " + result.message.stmt);
+                    return Evaluator.wrap_message("error", "if statement returns incompatible type with outer statement, saw: " + if_type + " expected: " + expected_type);
                 }
             } else {
                 final_stmt += next_token.value;
@@ -401,6 +422,11 @@ var consoleElements, Evaluator = {
         }
         // console.log(final_stmt);
         return Evaluator.wrap_message("success", final_stmt);
+    },
+    reset_variable_values: function(){
+        for(var i = 0; i < consoleElements.original_variable_values.length; ++i) {
+            eval(consoleElements.original_variable_values[i]);
+        }
     },
     create_internal_variable: function (tokens, economy_node) {
         var variable_name = tokens.shift().value;
@@ -479,16 +505,11 @@ var consoleElements, Evaluator = {
             if(result.message_type === "error"){
                 return result;
             }
-            console.log(result);
             stmt += " " + result.message;
-            console.log(stmt);
-            console.log(eval(stmt));
-            console.log(n.node_list["Node0"].variables["hello"].current_value);
-            return result;
+            return Evaluator.wrap_message("success", stmt);
         } else {
             return Evaluator.wrap_message("error", "expecting assignment operator");
         }
-        return Evaluator.wrap_message("success", "");
     },
     create_source_rule: function (tokens) {
 
