@@ -11,8 +11,8 @@ var consoleElements, Evaluator = {
         keywords: ["if", "else", "then", "endif", "reset", "min", "max", "VAR", ";", "(", ")"],
         conditional_operators: ["<", ">", "<=", ">=", "==", "!="],
         logical_operators: ["&&", "||", "!"],
-        assignment_operators: ["*=", "+=", "-=", "/=", "^=", "++", "--"],
-        mathematical_operators: ["+", "-", "*", "/", "=", "%", "^"],
+        assignment_operators: ["*=", "+=", "-=", "/=", "^=", "++", "--", "="],
+        mathematical_operators: ["+", "-", "*", "/", "%", "^"],
         input: "",
         button: {}
     },
@@ -27,16 +27,16 @@ var consoleElements, Evaluator = {
             return "Nothing Entered";
         }
         for (i = 0; i < rules.length; ++i) {
-            console.log(rules[i]);
             if (/^\s+$/.test(rules[i]) || rules[i] === "") {
                 continue;
             }
             rules[i] = rules[i].trim();
             rules[i] = rules[i].split(" ");
             var interpretation_result = Evaluator.interpret_rule(rules[i], economy_node);
-            if (interpretation_result !== true) {
-                console.log("interpretation failed " + interpretation_result);
-                return interpretation_result;
+            if (interpretation_result.hasOwnProperty("type")) {
+                return interpretation_result.message;
+            } else {
+                return "all rules ok";
             }
         }
     },
@@ -274,25 +274,28 @@ var consoleElements, Evaluator = {
             include_token = true;
             if (next_token.value === "then" && next_token.tag === current_if_depth) {
                 var parsed_conditional = Evaluator.parse_statement(conditional_stmt, economy_node);
-                console.log(parsed_conditional);
                 if (typeof (eval(parsed_conditional)) === "boolean") {
                     final_stmt += parsed_conditional + " ? ";
+                } else {
+                    return Evaluator.wrap_message("error", "if conditional block does not evaluate to boolean");
                 }
                 ++stmt_iterator;
                 include_token = false;
             } else if (next_token.value === "else" && next_token.tag === current_if_depth) {
                 var parsed_then = Evaluator.parse_statement(then_stmt, economy_node);
-                if (typeof (eval(parsed_then)) === "number" || typeof (eval(parsed_then)) === "boolean") {
-                    final_stmt += parsed_then;
+                if (typeof (eval(parsed_then)) === "number" || typeof (eval(parsed_then)) === "boolean" || typeof (eval(parsed_then)) === "undefined") {
+                    final_stmt += parsed_then + " : ";
+                } else {
+                    return Evaluator.wrap_message("error", "then statement block does not evaluate to desired type (number, boolean, none)");
                 }
-                final_stmt += " : ";
                 ++stmt_iterator;
                 include_token = false;
             } else if (next_token.value === "endif" && next_token.tag === current_if_depth) {
                 var parsed_else = Evaluator.parse_statement(else_stmt, economy_node);
-                console.log(parsed_else);
-                if (typeof (eval(parsed_else)) === "number" || typeof (eval(parsed_else)) === "boolean") {
+                if (typeof (eval(parsed_else)) === "number" || typeof (eval(parsed_else)) === "boolean" || typeof(eval(parsed_else)) === "undefined") {
                     final_stmt += parsed_else;
+                } else {
+                    return Evaluator.wrap_message("error", "else statement block does not evaluate to desired type (number, boolean, none)");
                 }
                 break;
             }
@@ -306,7 +309,13 @@ var consoleElements, Evaluator = {
             tokens: tokens
         };
     },
-    parse_statement: function (tokens, economy_node) {
+    wrap_message: function(type, message){
+        return {
+            type: type,
+            message: message
+        }
+    },
+    parse_statement: function (tokens, economy_node, expected_type) {
         var next_token = tokens.shift();
         var final_stmt = "";
         var result;
@@ -318,22 +327,22 @@ var consoleElements, Evaluator = {
             }
             else if (next_token.value === "if") {
                 result = Evaluator.parse_if(tokens, next_token.tag, economy_node);
+                if (result.hasOwnProperty("type")) {
+                    return result;
+                }
                 tokens = result.tokens;
                 var if_type = typeof (eval(result.stmt));
-                if (current_type === "") {
-                    current_type = if_type;
-                    final_stmt += result.stmt;
-                } else if (if_type === current_type) {
+                if (if_type === expected_type) {
                     final_stmt += result.stmt;
                 } else {
-                    return "if statement returns incompatible type with outer statement";
+                    return Evaluator.wrap_message("error", "if statement returns incompatible type with outer statement");
                 }
-            } else if (next_token.type === "conditional_operator" || next_token.type === "logical_operator") {
+            } else if (next_token.type === "logical_operator") {
                 type_check_result = check_type("boolean", "332 incompatible operator with current statement type, should be a ", next_token.value);
                 if (type_check_result !== true) {
                     return type_check_result;
                 }
-            } else if (next_token.type === "mathematical_operator") {
+            } else if (next_token.type === "mathematical_operator" || next_token.type === "conditional_operator") {
                 type_check_result = check_type("number", "337 incompatible operator with current statement type, should be a ", next_token.value);
                 if (type_check_result !== true) {
                     return type_check_result;
@@ -345,33 +354,31 @@ var consoleElements, Evaluator = {
                 }
             } else if (next_token.type === "number") {
                 type_check_result = check_type("number", "347 incompatible value with current statement type, should be a ", next_token.value);
-                console.log(type_check_result);
                 if (type_check_result !== true) {
                     return type_check_result;
                 }
             } else if (next_token.type === "variable") {
-                var variable_type = eval(next_token.value);
+                var variable_type = typeof(eval(next_token.value));
                 type_check_result = check_type(variable_type, "this variable is of type " + variable_type + " and should be of type ", next_token.value);
                 if (type_check_result !== true) {
                     return type_check_result;
                 }
             }
             function check_type(substatement_type, message, value) {
-                if (current_type === "") {
-                    current_type = substatement_type;
-                    final_stmt += value;
-                } else if (current_type === substatement_type) {
-                    final_stmt += value;
-                } else {
-                    return message + substatement_type;
-                }
+                // if (current_type === "") {
+                //     current_type = substatement_type;
+                final_stmt += value;
+                // } else if (current_type === substatement_type) {
+                //     final_stmt += value;
+                // } else {
+                //     return message + substatement_type;
+                // }
                 return true;
             }
 
-            console.log(next_token);
             next_token = tokens.shift();
         }
-        console.log(final_stmt);
+        // console.log(final_stmt);
         return final_stmt;
     },
     create_internal_variable: function (tokens, economy_node) {
@@ -453,10 +460,16 @@ var consoleElements, Evaluator = {
         if (operator.type === "assignment_operator") {
             // var next_token = tokens.shift();
             stmt += " " + operator.value;
-            var result = Evaluator.parse_statement(tokens, economy_node);
+            var result = Evaluator.parse_statement(tokens, economy_node, typeof (eval(variable_name)));
+            if(result.hasOwnProperty("type")){
+                return result;
+            }
+            console.log(result);
             stmt += " " + result;
+            // stmt = "\"" + stmt + "\"";
             console.log(stmt);
             console.log(eval(stmt));
+            console.log(n.node_list["Node0"].variables["hello"].current_value);
         } else {
             return "expecting assignment operator";
         }
