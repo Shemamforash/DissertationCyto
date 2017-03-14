@@ -31,17 +31,13 @@
     <div class="ui segment inverted" style="height: calc(100% - 60px); margin: 0px; padding: 0px; overflow: hidden;">
         <div class="ui title inverted green h1 icon" style="height: 30px"><i class="icon tags inverted green"></i>Resources
         </div>
-        <div class="content inverted">
-            <div class="ui buttons fluid inverted" id="tag_editor">
-                <div class="ui button inverted" id="add_tag_button"><i class="icon plus"></i>New</div>
-            </div>
+        <div class="content inverted" id="tag_editor">
         </div>
     </div>
     <div class="ui center aligned segment inverted" style="height: 60px; margin: 0px; padding: 0px;">
         <div class="ui button icon inverted green" style="height: 100%; width: 60px;"><i
                 class="icon chevron right inverted green large"></i></div>
     </div>
-    <!--</div>-->
 </div>
 
 <!--sidebar to control node attributes-->
@@ -50,22 +46,10 @@
         <input class="ui title green h1" style="height: 30px" type="text" id="node_name_input" placeholder="Name">
         <div class="ui icon button inverted right attached" id="edit_node_name"><i class="edit icon"></i></div>
     </div>
-
-    <!--<div class="ui fluid accordion">-->
-    <!--<div class="ui title inverted icon" style="height: 30px"><i class="icon tags inverted green"></i>Tags</div>-->
-    <!--<div class="content inverted">-->
-    <!--<div class="ui dropdown fluid labeled icon button inverted">-->
-    <!--<div class="text">Add Tag</div>-->
-    <!--<i class="plus icon inverted white"></i>-->
-    <!--<div class="menu inverted" id="tag_dropdown">-->
-    <!--</div>-->
-    <!--</div>-->
-    <!--</div>-->
     <div class="ui button inverted white icon fluid" id="add_rule">
-        Rules
-        <i class="icon plus"></i>
+        Edit Rules
+        <i class="icon edit"></i>
     </div>
-    <!--</div>-->
 </div>
 
 <!--modal window to add/edit rule, uses blockly-->

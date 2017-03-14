@@ -6,14 +6,14 @@ var eles, a, Behaviour = {
         return {
             graph_sidebar: $('#graph_sidebar'),
             node_sidebar: $('#node_sidebar'),
-            add_tag: $('#add_tag_button'),
-            edit_tag: $('#edit_tags_button'),
             edit_node_name: $('#edit_node_name'),
             sidebar_opener: $('#sidebar_opener'),
-            tag_editor: $('#tag_editor'),
             rules_editor: $('#rules_modal'),
             rules_editor_opener: $('#add_rule'),
-            node_name_input: $('#node_name_input')
+            node_name_input: $('#node_name_input'),
+
+            tag_editor: $('#tag_editor'),
+            add_tag: $('#add_tag_button'),
         }
     },
     attributes: {
@@ -48,7 +48,6 @@ var eles, a, Behaviour = {
             $(this).width("15px");
             $(this).text("");
         });
-        eles.add_tag.click(Behaviour.addTag);
         eles.edit_node_name.click(Behaviour.editNodeName);
         eles.rules_editor_opener.click(function () {
             $('#rule_name_input').val("");

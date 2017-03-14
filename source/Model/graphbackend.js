@@ -93,21 +93,39 @@ var e, n, r, Graph = {
             edges: edges
         }
     },
-    evaluator: {
-        internal_rules: [],
-        source_rules: [],
-        sink_rules: [],
-        evaluate: function () {
-            var i;
-            for (i = 0; i < Graph.evaluator.internal_rules.length; ++i) {
-                Graph.evaluator.internal_rules[i].run();
+    evaluate: function () {
+        var i;
+        var internal_vars = [], internal_rules = [], source_rules = [], sink_rules = [];
+        for(var node in n.node_list){
+            for(i = 0; i < node.rules.length; ++i){
+                switch(node.rules[i].rule_type){
+                    case "INTERNAL VAR":
+                        internal_vars.push(node.rules[i].code);
+                        break;
+                    case "INTERNAL":
+                        internal_rules.push(node.rules[i].code);
+                        break;
+                    case "SOURCE":
+                        source_rules.push(node.rules[i].code);
+                        break;
+                    case "SINK":
+                        sink_rules.push(node.rules[i].code);
+                        break;
+                    default:
+                        console.log("invalid rule type " + node.rules[i].rule_type);
+                        break;
+                };
             }
-            for (i = 0; i < Graph.evaluator.source_rules.length; ++i) {
-                Graph.evaluator.source_rules[i].run();
-            }
-            for (i = 0; i < Graph.evaluator.sink_rules.length; ++i) {
-                Graph.evaluator.sink_rules[i].run();
-            }
+        }
+
+        for (i = 0; i < Graph.evaluator.internal_rules.length; ++i) {
+            Graph.evaluator.internal_rules[i].run();
+        }
+        for (i = 0; i < Graph.evaluator.source_rules.length; ++i) {
+            Graph.evaluator.source_rules[i].run();
+        }
+        for (i = 0; i < Graph.evaluator.sink_rules.length; ++i) {
+            Graph.evaluator.sink_rules[i].run();
         }
     }
 };
