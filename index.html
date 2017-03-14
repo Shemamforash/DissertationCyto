@@ -69,11 +69,11 @@
 </div>
 
 <!--modal window to add/edit rule, uses blockly-->
-<div class="ui modal" id="rules_modal" style="padding: 5px;">
-    <div class="ui secondary menu" style="height: 50px; margin: 0px; padding: 5px;">
+<div class="ui modal" id="rules_modal" style="padding: 5px; background-color: #1b1c1d;">
+    <div class="ui secondary menu inverted" style="height: 50px; margin: 0px; padding: 5px;">
         <div class="item" style="width: calc(100% - 150px); margin: 0px;">
-            <div class="ui input inverted green header">
-                <input class="ui title green h1" style="height: 30px" type="text" placeholder="Name"
+            <div class="ui inverted input" style="background-color: #1b1c1d; color: white;">
+                <input class="ui title green h1" style="height: 100%; background-color: #1b1c1d; color: white;" type="text" placeholder="Name"
                        oninput="Behaviour.rule_editor.change_rule_name(this.value)" id="rule_name_input">
             </div>
         </div>
@@ -84,11 +84,12 @@
             </button>
         </div>
     </div>
-    <div class="segment fluid" style="height: calc(100% - 50px); width: 100%;">
-        <textarea id="code_textarea" style="width: 100%; height: 80%; resize: none;">INTERNAL VAR hello = 5;
-            INTERNAL hello = if ( 2 < 3 ) && true then hello += hello + if true then hello else 5 endif else 0 endif;</textarea>
-        <div id="error_message" style="width: 100%; height: 10%;">No Errors</div>
-        <div class="ui button green" id="accept_rule" style="width: 100%; height: 10%">Save Rules</div>
+    <div class="ui segment fluid inverted" style="height: calc(100% - 50px); width: 100%; margin: 0px; padding-top: 0px;">
+        <textarea id="code_textarea" style="width: 100%; height: 80%; resize: none; background-color: transparent; color: white;">INTERNAL VAR hello = 5;
+            INTERNAL hello = if ( 2 < 3 ) && true then hello += hello + if true then hello else 5 endif else 0 endif;
+        SOURCE health : 7;</textarea>
+        <div id="error_message" style="width: 100%; height: 10%; background-color: transparent; color: white; padding-top: 6px;">No Errors</div>
+        <div class="ui button green inverted" id="accept_rule" style="width: 100%; height: 10%">Save Rules</div>
     </div>
 
 </div>

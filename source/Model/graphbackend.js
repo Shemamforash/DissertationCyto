@@ -31,18 +31,22 @@ var e, n, r, Graph = {
     nodes: {
         node_number: 0,
         node_list: {},
-        create_rule: function (rule_id, code, xml_blocks) {
-            var graph_node = n.node_list[CyA.current_node.id()];
+        create_rule: function (rule_name, code, rule_type) {
+            var graph_node = CyA.current_node;
             var current_rule = null;
             if (graph_node) {
-                if (rule_id === "") {
-                    rule_id = 'Rule ' + graph_node.rules.length;
-
+                if (rule_name === "") {
+                    rule_name = 'Rule ' + graph_node.rules.length;
+                }
+                for(var i = 0; i < graph_node.rules.length; ++i){
+                    if(graph_node.rules[i].name === rule_name){
+                        rule_name = rule_name + graph_node.rules.length;
+                    }
                 }
                 current_rule = {
-                    id: rule_id,
+                    name: rule_name,
                     code: code,
-                    blocks: xml_blocks
+                    rule_type: rule_type
                 };
                 graph_node.rules.push(current_rule);
             }
@@ -93,7 +97,7 @@ var e, n, r, Graph = {
             }
             n.node_number++;
             cy_node.variables = {};
-            cy_node.rules = {};
+            cy_node.rules = [];
             n.node_list[id] = cy_node;
             return true;
         },

@@ -14,38 +14,22 @@ var environment = {
             console.log("no such tagged variable exists: " + name);
         }
     },
-    make_node: function(name){
-        return {
-            name: name,
-            rules: [],
-            variables: {},
-            add_variable: function(name, value){
-                if(this.variables.hasOwnProperty(name)){
-                    return false;
-                } else {
-                    this.name = value;
+    create_resource: function(name){
+        if(!environment.attributes.resources.hasOwnProperty(name)){
+            environment.attributes.resources[name] = {
+                name: name,
+                value: 0,
+                increment: function(amnt){
+                    this.value += amnt;
+                },
+                decrement: function(amnt){
+                    this.value -= amnt;
                 }
-            },
-            get_variable: function(name){
-                if(this.variables.hasOwnProperty(name)){
-                    return this.variables.name;
-                } else {
-                    console.log("variable does not exist");
-                }
-            },
-            add_rule: function(type, rule){
-                this.rules.push({
-                    type: type,
-                    rule: rule
-                });
-            },
-            evaluate: function(type){
-                for(var i = 0; i < this.rules.length; ++i){
-                    if(this.rules[i].type === type){
-                        eval(this.rules[i].rule);
-                    }
-                }
-            }
+            };
         }
+        return environment.attributes.resources[name];
+    },
+    reset_variables: function(){
+        environment.attributes.resources = {};
     }
 };

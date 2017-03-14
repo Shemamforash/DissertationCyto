@@ -8,7 +8,7 @@
 var consoleElements, Evaluator = {
     elements: {
         rule_types: ["INTERNAL", "SOURCE", "SINK"],
-        keywords: ["if", "else", "then", "endif", "reset", "min", "max", "VAR", ";", "(", ")"],
+        keywords: ["if", "else", "then", "endif", "reset", "min", "max", "VAR", ";", ":", "(", ")"],
         conditional_operators: ["<", ">", "<=", ">=", "==", "!="],
         logical_operators: ["&&", "||", "!"],
         assignment_operators: ["*=", "+=", "-=", "/=", "^=", "++", "--", "="],
@@ -36,15 +36,14 @@ var consoleElements, Evaluator = {
             rules[i] = rules[i].split(" ");
             var interpretation_result = Evaluator.interpret_rule(rules[i], economy_node);
             Evaluator.reset_variable_values();
-            if (interpretation_result.message_type === "error") {
-                return interpretation_result.message;
-            } else {
+            if (interpretation_result.message_type !== "error") {
                 console.log(interpretation_result.message);
                 console.log(eval(interpretation_result.message));
                 console.log(n.node_list["Node0"].variables["hello"].current_value);
             }
         }
-        return "all rules ok";
+        environment.reset_variables();
+        return interpretation_result;
     },
     print_tokens: function (tokens) {
         for (var i = 0; i < tokens.length; ++i) {
@@ -139,34 +138,46 @@ var consoleElements, Evaluator = {
                         tokens.shift();
                         variable_check_result = Evaluator.check_variables(tokens, economy_node, true);
                         if (variable_check_result.message_type === "success") {
-                            return Evaluator.create_internal_variable(tokens, economy_node);
+                            var rule = Evaluator.create_internal_variable(tokens, economy_node);
+                            rule.rule_type = "INTERNAL VAR";
+                            return rule;
                         } else {
                             return variable_check_result;
                         }
                     } else {
                         variable_check_result = Evaluator.check_variables(tokens, economy_node, false);
-                        if (variable_check_result.message_type === "success") {
-                            return Evaluator.create_internal_rule(tokens, economy_node);
+                        if (variable_check_result.message_type ==="success") {
+                            var rule = Evaluator.create_rule(tokens, economy_node, "anything");
+                            rule.rule_type = "INTERNAL";
+                            return rule;
                         } else {
                             return variable_check_result;
                         }
                     }
-                } else if (rule_type === "SOURCE") {
+                } else if (rule_type === "SOURCE" || rule_type === "SINK") {
                     variable_check_result = Evaluator.check_variables(tokens, economy_node, false);
                     if (variable_check_result.message_type === "success") {
-                        return Evaluator.create_source_rule(tokens, economy_node);
+                        var variable = tokens.shift();
+                        if (variable.type === "resource variable") {
+                            if (tokens.shift().value == ":") {
+                                var rule = Evaluator.create_rule(tokens, economy_node, "number");
+                                rule.rule_type = rule_type;
+                                if (rule_type === "SOURCE") {
+                                    return variable.value + ".increment(" + rule + ");";
+                                } else {
+                                    return variable.value + ".decrement(" + rule + ");";
+                                }
+                            } else {
+                                return Evaluator.wrap_message("error", "source and sink rules must be of the form 'SOURCE resource_name : statement");
+                            }
+                        } else {
+                            return Evaluator.wrap_message("error", rule_type + " requires a valid resource type to be specified, you said " + variable.type + " " + variable.value);
+                        }
+
+
                     } else {
                         return variable_check_result;
                     }
-                } else if (rule_type === "SINK") {
-                    variable_check_result = Evaluator.check_variables(tokens, economy_node, false);
-                    if (variable_check_result.message_type === "success") {
-                        return Evaluator.create_sink_rule(tokens, economy_node);
-                    } else {
-                        return variable_check_result;
-                    }
-                } else {
-                    return Evaluator.wrap_message("error", "not a valid rule format");
                 }
             }
         } else {
@@ -179,17 +190,17 @@ var consoleElements, Evaluator = {
             if (tokens[i].type === "variable" && !ignore_first) {
                 var variable_reference;
                 if (economy_node.variables.hasOwnProperty(tokens[i].value)) {
+                    tokens[i].type = "internal variables";
                     internal_variable = economy_node.variables[tokens[i].value];
                     variable_reference = "n.node_list['" + economy_node.id() + "'].variables['" + internal_variable.name + "'].current_value = " + internal_variable.current_value;
                     tokens[i].value = "n.node_list['" + economy_node.id() + "'].variables['" + internal_variable.name + "'].current_value";
                     tokens[i].temp_value = eval(tokens[i].value);
-                } else if (environment.attributes.resources.hasOwnProperty(tokens[i].value)) {
-                    resource = environment.attributes.resources[tokens[i].value];
-                    variable_reference = "environment.attributes.resources['" + resource.name + "'] = " + resource.value;
-                    tokens[i].value = "environment.attributes.resources['" + resource.name + "']";
-                    tokens[i].temp_value = eval(tokens[i].value);
                 } else {
-                    return Evaluator.wrap_message("error", "variable " + tokens[i].value + " does not exist");
+                    tokens[i].type = "resource variable";
+                    resource = environment.create_resource(tokens[i].value);
+                    variable_reference = "environment.create_resource['" + resource.name + "']";
+                    tokens[i].value = "environment.create_resource['" + resource.name + "']";
+                    tokens[i].temp_value = eval(tokens[i].value);
                 }
                 consoleElements.original_variable_values.push(variable_reference);
             }
@@ -288,7 +299,7 @@ var consoleElements, Evaluator = {
 
             if (next_token.value === "then" && next_token.tag === current_if_depth) {
                 var parse_result = Evaluator.parse_statement(conditional_stmt, economy_node);
-                if(parse_result.message_type === "error"){
+                if (parse_result.message_type === "error") {
                     return parse_result;
                 } else {
                     var parsed_conditional = parse_result.message;
@@ -304,7 +315,7 @@ var consoleElements, Evaluator = {
             }
             else if (next_token.value === "else" && next_token.tag === current_if_depth) {
                 var parse_result = Evaluator.parse_statement(then_stmt, economy_node, expected_type);
-                if(parse_result.message_type === "error"){
+                if (parse_result.message_type === "error") {
                     return parse_result;
                 } else {
                     var parsed_then = parse_result.message;
@@ -321,12 +332,12 @@ var consoleElements, Evaluator = {
             }
             else if (next_token.value === "endif" && next_token.tag === current_if_depth) {
                 var parse_result = Evaluator.parse_statement(else_stmt, economy_node, expected_type);
-                if(parse_result.message_type === "error"){
+                if (parse_result.message_type === "error") {
                     return parse_result;
                 } else {
                     var parsed_else = parse_result.message;
                     var block_type = typeof (eval(parsed_else));
-                    if(block_type !== if_type){
+                    if (block_type !== if_type) {
                         return Evaluator.wrap_message("error", "if blocks do not have the same return value type");
                     }
                     if (block_type === "number" || block_type === "boolean" || block_type === "undefined") {
@@ -348,7 +359,7 @@ var consoleElements, Evaluator = {
             if_type: if_type
         });
     },
-    wrap_message: function(type, message){
+    wrap_message: function (type, message) {
         return {
             message_type: type,
             message: message
@@ -423,8 +434,8 @@ var consoleElements, Evaluator = {
         // console.log(final_stmt);
         return Evaluator.wrap_message("success", final_stmt);
     },
-    reset_variable_values: function(){
-        for(var i = 0; i < consoleElements.original_variable_values.length; ++i) {
+    reset_variable_values: function () {
+        for (var i = 0; i < consoleElements.original_variable_values.length; ++i) {
             eval(consoleElements.original_variable_values[i]);
         }
     },
@@ -494,28 +505,12 @@ var consoleElements, Evaluator = {
             return true;
         }
     },
-    create_internal_rule: function (tokens, economy_node) {
-        var variable_name = tokens.shift().value;
-        var stmt = variable_name;
-        var operator = tokens.shift();
-        if (operator.type === "assignment_operator") {
-            // var next_token = tokens.shift();
-            stmt += " " + operator.value;
-            var result = Evaluator.parse_statement(tokens, economy_node, typeof (eval(variable_name)));
-            if(result.message_type === "error"){
-                return result;
-            }
-            stmt += " " + result.message;
-            return Evaluator.wrap_message("success", stmt);
-        } else {
-            return Evaluator.wrap_message("error", "expecting assignment operator");
+    create_rule: function (tokens, economy_node, type) {
+        var result = Evaluator.parse_statement(tokens, economy_node, type);
+        if (result.message_type === "error") {
+            return result;
         }
-    },
-    create_source_rule: function (tokens) {
-
-    },
-    create_sink_rule: function (tokens) {
-
+        return Evaluator.wrap_message("success", result.message);
     }
 };
 

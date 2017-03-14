@@ -75,10 +75,13 @@ var eles, a, Behaviour = {
                 var rule_name = $('#rule_name_input').val();
                 var rule_button = $('<button class="ui button red rule fluid"></button>');
                 var result = Evaluator.tokenizer(code, CyA.current_node);
-                $('#error_message').text(result);
-
+                if(result.message_type !== "error"){
+                    n.create_rule(rule_name, result.message, result.rule_type);
+                    $('#error_message').text("all rules ok!");
+                } else {
+                    $('#error_message').text(result.message);
+                }
                 Behaviour.rule_editor.current_rule = null;
-                // $('.ui.modal').modal('hide');
             }
         },
 
@@ -92,7 +95,7 @@ var eles, a, Behaviour = {
         },
 
         discard_rule: function () {
-            workspace.clear();
+            $('#code_textarea').val("");
             Behaviour.rule_editor.current_rule = null;
             $('.ui.modal').modal('hide');
         },
