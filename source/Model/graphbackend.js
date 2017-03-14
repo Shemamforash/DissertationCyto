@@ -31,53 +31,28 @@ var e, n, r, Graph = {
     nodes: {
         node_number: 0,
         node_list: {},
-        create_rule: function (rule_name, code, rule_type) {
+        create_rules: function (rules) {
             var graph_node = CyA.current_node;
-            var current_rule = null;
             if (graph_node) {
-                if (rule_name === "") {
-                    rule_name = 'Rule ' + graph_node.rules.length;
-                }
-                for(var i = 0; i < graph_node.rules.length; ++i){
-                    if(graph_node.rules[i].name === rule_name){
-                        rule_name = rule_name + graph_node.rules.length;
-                    }
-                }
-                current_rule = {
-                    name: rule_name,
-                    code: code,
-                    rule_type: rule_type
-                };
-                graph_node.rules.push(current_rule);
-            }
-            return current_rule;
-        },
-        change_rule_name: function (rule, new_id) {
-            //TODO Check id is unique
-            rule.id = new_id;
-        },
-        edit_rule: function (rule_id, code, xml_blocks) {
-            var graph_node = n.node_list[CyA.current_node.id()];
-            if (graph_node) {
-                for (var i = 0; i < graph_node.rules.length; ++i) {
-                    var current_rule = graph_node.rules[i];
-                    if (current_rule.id === rule_id) {
-                        current_rule.code = code;
-                        current_rule.blocks = xml_blocks;
-                    }
+                graph_node.rules = [];
+                for (var i = 0; i < rules.length; ++i) {
+                    var new_rule = null;
+                    new_rule = {
+                        rule_text: rules[i].rule_text,
+                        code: rules[i].code,
+                        rule_type: rules[i].rule_type
+                    };
+                    graph_node.rules.push(new_rule);
                 }
             }
         },
-        delete_rule: function (rule_id) {
-            var graph_node = n.node_list[CyA.current_node];
-            if (graph_node) {
-                for (var i = 0; i < graph_node.rules.length; ++i) {
-                    var current_rule = graph_node.rules[i];
-                    if (current_rule.id === rule_id) {
-                        graph_node.rules.splice(i, 1);
-                    }
-                }
+        get_rules_as_string: function () {
+            var existing_rules = CyA.current_node.rules;
+            var rule_string = "";
+            for (var i = 0; i < existing_rules.length; ++i) {
+                rule_string += existing_rules[i].rule_text + "\n";
             }
+            return rule_string;
         },
         node_overlaps: function (x, y, id) {
             for (var node in n.node_list) {
@@ -112,43 +87,6 @@ var e, n, r, Graph = {
             }
         }
     },
-    //Manages the current list of resources in the system
-    //Tags must be unique and can only be declared in the graph sidebar
-    resources: {
-        resource_list: [],
-        exists: function (resource_name) {
-            var i = r.resource_list.indexOf(resource_name);
-            return i == -1 ? null : t.resource_list[i];
-        },
-        //Returns false if a tag with the given name already exists
-        //Tags are pairs of a name and an element corresponding to the element in the graph sidebar
-        update: function (element_id, resource_name) {
-            if (r.exists(resource_name)) {
-                if (resource_name === element_id) {
-                    return true;
-                } else {
-                    return false;
-                }
-            } else {
-                if (resource_name !== "") {
-                    r.resource_list.push(resource_name);
-                }
-                r.resource_list.splice(r.resource_list.indexOf(element_id), 1);
-                return true;
-            }
-        },
-        //Returns false if no tag found
-        //Otherwise removes the tag and returns true
-        remove: function (resource_name) {
-            var resource = r.exists(resource_name);
-            if (resource) {
-                r.resource_list.splice(r.resource_list.indexOf(resource), 1);
-                return true;
-            }
-            return false;
-        },
-    },
-
     getAsJSON: function () {
         return {
             nodes: nodes,
@@ -161,13 +99,13 @@ var e, n, r, Graph = {
         sink_rules: [],
         evaluate: function () {
             var i;
-            for(i = 0; i < Graph.evaluator.internal_rules.length; ++i){
+            for (i = 0; i < Graph.evaluator.internal_rules.length; ++i) {
                 Graph.evaluator.internal_rules[i].run();
             }
-            for(i = 0; i < Graph.evaluator.source_rules.length; ++i){
+            for (i = 0; i < Graph.evaluator.source_rules.length; ++i) {
                 Graph.evaluator.source_rules[i].run();
             }
-            for(i = 0; i < Graph.evaluator.sink_rules.length; ++i){
+            for (i = 0; i < Graph.evaluator.sink_rules.length; ++i) {
                 Graph.evaluator.sink_rules[i].run();
             }
         }

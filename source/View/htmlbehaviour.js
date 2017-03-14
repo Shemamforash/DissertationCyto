@@ -68,50 +68,28 @@ var eles, a, Behaviour = {
     },
 
     rule_editor: {
-        current_rule: null,
         accept_rule: function () {
             if ($('.ui.dimmer.modals').first().hasClass("active") && !$('.ui.dimmer.modals').first().hasClass("animating")) {
                 var code = $('#code_textarea').val();
-                var rule_name = $('#rule_name_input').val();
                 var rule_button = $('<button class="ui button red rule fluid"></button>');
                 var result = Evaluator.tokenizer(code, CyA.current_node);
                 if(result.message_type !== "error"){
-                    n.create_rule(rule_name, result.message, result.rule_type);
+                    n.create_rules(result.message);
                     $('#error_message').text("all rules ok!");
                 } else {
                     $('#error_message').text(result.message);
                 }
-                Behaviour.rule_editor.current_rule = null;
             }
         },
-
-        edit_rule: function (event) {
-            var rule = event.data;
-            var xml = Blockly.Xml.textToDom(rule.blocks);
-            $('#rule_name_input').val(rule.id);
-            Blockly.Xml.domToWorkspace(xml, workspace);
-            $(eles.rules_editor).modal('show');
-            Behaviour.rule_editor.current_rule = rule;
-        },
-
         discard_rule: function () {
-            $('#code_textarea').val("");
-            Behaviour.rule_editor.current_rule = null;
             $('.ui.modal').modal('hide');
-        },
-
-        delete_rule: function () {
-            Graph.nodes.delete_rule(1);
-        },
-        change_rule_name: function(new_name){
-            if(Behaviour.rule_editor.current_rule !== null){
-                Graph.nodes.change_rule_name(Behaviour.rule_editor.current_rule, new_name);
-            }
         }
     },
 
     update_node_sidebar: function(){
-        
+        var node = CyA.current_node;
+        $('#code_textarea').val(n.get_rules_as_string());
+        $('#node_name_input').val(node.data().label);
     },
 
     addTag: function () {

@@ -21,7 +21,7 @@ var consoleElements, Evaluator = {
         consoleElements = Evaluator.elements;
     },
     tokenizer: function (input, economy_node) {
-        var i, rules;
+        var i, rules, validated_rules = [];
         consoleElements.original_variable_values = [];
         input.replace(/\r?\n|\r/, " ");
         rules = input.split(";");
@@ -33,17 +33,26 @@ var consoleElements, Evaluator = {
                 continue;
             }
             rules[i] = rules[i].trim();
+            var rule = {
+                rule_text: rules[i]
+            };
             rules[i] = rules[i].split(" ");
             var interpretation_result = Evaluator.interpret_rule(rules[i], economy_node);
             Evaluator.reset_variable_values();
             if (interpretation_result.message_type !== "error") {
+                rule.code = interpretation_result.message;
+                rule.rule_type = interpretation_result.rule_type;
+                validated_rules.push(rule);
+                console.log(interpretation_result);
                 console.log(interpretation_result.message);
                 console.log(eval(interpretation_result.message));
-                console.log(n.node_list["Node0"].variables["hello"].current_value);
+                // console.log(n.node_list["Node0"].variables["hello"].current_value);
+            } else {
+                return interpretation_result;
             }
         }
         environment.reset_variables();
-        return interpretation_result;
+        return Evaluator.wrap_message("success", validated_rules);
     },
     print_tokens: function (tokens) {
         for (var i = 0; i < tokens.length; ++i) {
@@ -161,11 +170,16 @@ var consoleElements, Evaluator = {
                         if (variable.type === "resource variable") {
                             if (tokens.shift().value == ":") {
                                 var rule = Evaluator.create_rule(tokens, economy_node, "number");
+                                if(rule.message_type === "error"){
+                                    return rule;
+                                }
                                 rule.rule_type = rule_type;
                                 if (rule_type === "SOURCE") {
-                                    return variable.value + ".increment(" + rule + ");";
+                                    rule.message = variable.value + ".increment(" + rule.message + ");";
+                                    return rule;
                                 } else {
-                                    return variable.value + ".decrement(" + rule + ");";
+                                    rule.message = variable.value + ".decrement(" + rule.message + ");";
+                                    return rule;
                                 }
                             } else {
                                 return Evaluator.wrap_message("error", "source and sink rules must be of the form 'SOURCE resource_name : statement");
@@ -198,8 +212,8 @@ var consoleElements, Evaluator = {
                 } else {
                     tokens[i].type = "resource variable";
                     resource = environment.create_resource(tokens[i].value);
-                    variable_reference = "environment.create_resource['" + resource.name + "']";
-                    tokens[i].value = "environment.create_resource['" + resource.name + "']";
+                    variable_reference = "environment.create_resource('" + resource.name + "')";
+                    tokens[i].value = "environment.create_resource('" + resource.name + "')";
                     tokens[i].temp_value = eval(tokens[i].value);
                 }
                 consoleElements.original_variable_values.push(variable_reference);
