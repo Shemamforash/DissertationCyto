@@ -9,7 +9,7 @@ var consoleElements, Evaluator = {
     elements: {
         rule_types: ["INTERNAL", "SOURCE", "SINK"],
         keywords: ["if", "else", "then", "endif", "reset_simulation", "min", "max", "VAR", ";", ":", "(", ")"],
-        conditional_operators: ["<", ">", "<=", ">=", "==", "!="],
+        conditional_operators: ["<", ">", "<=", ">=", "===", "!="],
         logical_operators: ["&&", "||", "!"],
         assignment_operators: ["*=", "+=", "-=", "/=", "^=", "++", "--", "="],
         mathematical_operators: ["+", "-", "*", "/", "%", "^"],
@@ -42,6 +42,7 @@ var consoleElements, Evaluator = {
             if (interpretation_result.message_type !== "error") {
                 rule.code = interpretation_result.message;
                 rule.rule_type = interpretation_result.rule_type;
+                rule.layer = interpretation_result.layer;
                 validated_rules.push(rule);
                 console.log(economy_node);
                 console.log(interpretation_result);
@@ -166,26 +167,34 @@ var consoleElements, Evaluator = {
                 } else if (rule_type === "SOURCE" || rule_type === "SINK") {
                     variable_check_result = Evaluator.check_variables(tokens, economy_node, false);
                     if (variable_check_result.message_type === "success") {
-                        var variable = tokens.shift();
-                        if (variable.type === "resource variable") {
-                            if (tokens.shift().value == ":") {
-                                var rule = Evaluator.create_rule(tokens, economy_node, "number");
-                                if (rule.message_type === "error") {
-                                    return rule;
-                                }
-                                rule.rule_type = rule_type;
-                                if (rule_type === "SOURCE") {
-                                    rule.message = variable.value + ".increment(" + rule.message + ");";
-                                    return rule;
+                        var layer = tokens.shift();
+                        if(layer.type === "number") {
+                            layer = layer.value;
+                            var variable = tokens.shift();
+                            if (variable.type === "resource variable") {
+                                if (tokens.shift().value == ":") {
+                                    var rule = Evaluator.create_rule(tokens, economy_node, "number", layer);
+                                    if (rule.message_type === "error") {
+                                        return rule;
+                                    }
+                                    rule.rule_type = rule_type;
+                                    if (rule_type === "SOURCE") {
+                                        rule.message = variable.value + ".increment(" + rule.message + ");";
+                                        rule.layer = layer;
+                                        return rule;
+                                    } else {
+                                        rule.message = variable.value + ".decrement(" + rule.message + ");";
+                                        rule.layer = layer;
+                                        return rule;
+                                    }
                                 } else {
-                                    rule.message = variable.value + ".decrement(" + rule.message + ");";
-                                    return rule;
+                                    return Evaluator.wrap_message("error", "source and sink rules must be of the form 'SOURCE resource_name : statement");
                                 }
                             } else {
-                                return Evaluator.wrap_message("error", "source and sink rules must be of the form 'SOURCE resource_name : statement");
+                                return Evaluator.wrap_message("error", rule_type + " requires a valid resource type to be specified, you said " + variable.type + " " + variable.value);
                             }
                         } else {
-                            return Evaluator.wrap_message("error", rule_type + " requires a valid resource type to be specified, you said " + variable.type + " " + variable.value);
+                            return Evaluator.wrap_message("error", "source and sink rules must have a numeric layer specified");
                         }
 
 
@@ -229,6 +238,7 @@ var consoleElements, Evaluator = {
         }
     },
     is_conditional_operator: function (token) {
+        token = token === "==" ? "===" : token;
         if (consoleElements.conditional_operators.indexOf(token) === -1) {
             return false;
         } else {
@@ -317,6 +327,7 @@ var consoleElements, Evaluator = {
                     return parse_result;
                 } else {
                     var parsed_conditional = parse_result.message;
+                    console.log(parsed_conditional);
                     var block_type = typeof (eval(parsed_conditional));
                     if (block_type === "boolean") {
                         final_stmt += parsed_conditional + " ? ";
@@ -334,6 +345,9 @@ var consoleElements, Evaluator = {
                 } else {
                     var parsed_then = parse_result.message;
                     var block_type = typeof (eval(parsed_then));
+                    if(block_type === "object"){
+                        block_type = "number";
+                    }
                     if_type = block_type;
                     if (block_type === "number" || block_type === "boolean" || block_type === "undefined") {
                         final_stmt += parsed_then + " : ";
@@ -401,6 +415,9 @@ var consoleElements, Evaluator = {
                 } else {
                     return Evaluator.wrap_message("error", "if statement returns incompatible type with outer statement, saw: " + if_type + " expected: " + expected_type);
                 }
+            } else if (next_token.type == "resource variable"){
+                next_token.value += ".value";
+                final_stmt += next_token.value;
             } else {
                 final_stmt += next_token.value;
             }

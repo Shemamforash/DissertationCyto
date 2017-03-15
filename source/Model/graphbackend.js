@@ -40,7 +40,8 @@ var e, n, r, Graph = {
                     new_rule = {
                         rule_text: rules[i].rule_text,
                         code: rules[i].code,
-                        rule_type: rules[i].rule_type
+                        rule_type: rules[i].rule_type,
+                        layer: rules[i].layer
                     };
                     graph_node.rules.push(new_rule);
                 }
@@ -132,13 +133,13 @@ var e, n, r, Graph = {
                     case "INTERNAL VAR":
                         break;
                     case "INTERNAL":
-                        internal_rules.push(node.rules[i].code);
+                        internal_rules.push(node.rules[i]);
                         break;
                     case "SOURCE":
-                        source_rules.push(node.rules[i].code);
+                        source_rules.push(node.rules[i]);
                         break;
                     case "SINK":
-                        sink_rules.push(node.rules[i].code);
+                        sink_rules.push(node.rules[i]);
                         break;
                     default:
                         console.log("invalid rule type " + node.rules[i].rule_type);
@@ -147,16 +148,21 @@ var e, n, r, Graph = {
             }
         }
 
+        function compare(a,b) {
+            return a.layer - b.layer;
+        }
+
+        source_rules.sort(compare);
+        sink_rules.sort(compare);
+
         for (i = 0; i < internal_rules.length; ++i) {
-            console.log(internal_rules[i]);
-            eval(internal_rules[i]);
+            eval(internal_rules[i].code);
         }
         for (i = 0; i < source_rules.length; ++i) {
-            eval(source_rules[i]);
+            eval(source_rules[i].code);
         }
         for (i = 0; i < sink_rules.length; ++i) {
-            eval(sink_rules[i]);
+            eval(sink_rules[i].code);
         }
-        console.log(environment.resources["health"].value);
     }
 };
