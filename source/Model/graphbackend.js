@@ -93,14 +93,43 @@ var e, n, r, Graph = {
             edges: edges
         }
     },
+    reset_simulation: function () {
+        environment.reset_variables();
+        for (var node in n.node_list) {
+            node = n.node_list[node];
+            node.variables = [];
+            console.log(node);
+            for (var i = 0; i < node.rules.length; ++i) {
+                console.log(node.rules[i]);
+                if (node.rules[i].rule_type === "INTERNAL VAR") {
+                    eval(node.rules[i].code);
+                }
+            }
+            for(var variable in n.variables){
+                variable.watch("current_value", function () {
+                    if (this.max_value !== undefined && this.current_value > this.max_value) {
+                        this.current_value = this.max_value;
+                    } else if (this.min_value !== undefined && this.current_value < this.min_value) {
+                        this.current_value = this.max_value;
+                    }
+                });
+            }
+        }
+    },
     evaluate: function () {
         var i;
-        var internal_vars = [], internal_rules = [], source_rules = [], sink_rules = [];
-        for(var node in n.node_list){
-            for(i = 0; i < node.rules.length; ++i){
-                switch(node.rules[i].rule_type){
+        var internal_rules = [], source_rules = [], sink_rules = [];
+        for (var node in n.node_list) {
+            node = n.node_list[node];
+            for (i = 0; i < node.variables.length; ++i) {
+                var reset_value = node.variables[i].reset_value;
+                if (reset_value !== undefined) {
+                    node.variables[i].current_value = reset_value;
+                }
+            }
+            for (i = 0; i < node.rules.length; ++i) {
+                switch (node.rules[i].rule_type) {
                     case "INTERNAL VAR":
-                        internal_vars.push(node.rules[i].code);
                         break;
                     case "INTERNAL":
                         internal_rules.push(node.rules[i].code);
@@ -114,18 +143,20 @@ var e, n, r, Graph = {
                     default:
                         console.log("invalid rule type " + node.rules[i].rule_type);
                         break;
-                };
+                }
             }
         }
 
-        for (i = 0; i < Graph.evaluator.internal_rules.length; ++i) {
-            Graph.evaluator.internal_rules[i].run();
+        for (i = 0; i < internal_rules.length; ++i) {
+            console.log(internal_rules[i]);
+            eval(internal_rules[i]);
         }
-        for (i = 0; i < Graph.evaluator.source_rules.length; ++i) {
-            Graph.evaluator.source_rules[i].run();
+        for (i = 0; i < source_rules.length; ++i) {
+            eval(source_rules[i]);
         }
-        for (i = 0; i < Graph.evaluator.sink_rules.length; ++i) {
-            Graph.evaluator.sink_rules[i].run();
+        for (i = 0; i < sink_rules.length; ++i) {
+            eval(sink_rules[i]);
         }
+        console.log(environment.resources["health"].value);
     }
 };

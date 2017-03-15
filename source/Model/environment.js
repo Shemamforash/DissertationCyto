@@ -2,21 +2,10 @@
  * Created by Iovana on 07/03/2017.
  */
 var environment = {
-    attributes: {
-        nodes: {},
-        edges: {},
-        resources: {}
-    },
-    modify_resource: function(name, value){
-        if(environment.attributes.hasOwnProperty(name)){
-            environment.attributes.name += value;
-        } else {
-            console.log("no such tagged variable exists: " + name);
-        }
-    },
+    resources: {},
     create_resource: function(name){
-        if(!environment.attributes.resources.hasOwnProperty(name)){
-            environment.attributes.resources[name] = {
+        if(!environment.resources.hasOwnProperty(name)){
+            environment.resources[name] = {
                 name: name,
                 value: 0,
                 increment: function(amnt){
@@ -27,9 +16,9 @@ var environment = {
                 }
             };
         }
-        return environment.attributes.resources[name];
+        return environment.resources[name];
     },
     reset_variables: function(){
-        environment.attributes.resources = {};
+        environment.resources = {};
     }
 };

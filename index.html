@@ -10,8 +10,9 @@
 
     <!--external js-->
     <script src="http://code.jquery.com/jquery-2.0.3.min.js"></script>
-    <script src="libraries/cytoscape.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/2.7.16/cytoscape.min.js"></script>
     <script src="libraries/cytoscape-snap-to-grid.js"></script>
+    <script src="libraries/objectwatcher.js"></script>
     <script src="https://cdn.jsdelivr.net/semantic-ui/2.2.8/semantic.min.js"></script>
 
     <!--internal js-->
@@ -35,8 +36,9 @@
         </div>
     </div>
     <div class="ui center aligned segment inverted" style="height: 60px; margin: 0px; padding: 0px;">
-        <div class="ui button icon inverted green" style="height: 100%; width: 60px;"><i
-                class="icon chevron right inverted green large"></i></div>
+        <div class="ui button icon inverted green" id="simulate_step_button" style="height: 100%; width: 60px;"><i
+                class="icon chevron right inverted green large"></i>
+        </div>
     </div>
 </div>
 

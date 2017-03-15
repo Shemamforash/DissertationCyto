@@ -11,9 +11,8 @@ var eles, a, Behaviour = {
             rules_editor: $('#rules_modal'),
             rules_editor_opener: $('#add_rule'),
             node_name_input: $('#node_name_input'),
-
-            tag_editor: $('#tag_editor'),
-            add_tag: $('#add_tag_button'),
+            simulate_button: $('#simulate_step_button'),
+            tag_editor: $('#tag_editor')
         }
     },
     attributes: {
@@ -35,6 +34,7 @@ var eles, a, Behaviour = {
             dimPage: false,
             exclusive: true,
         });
+        eles.simulate_button.click(Behaviour.simulate);
         eles.node_sidebar.sidebar({
             closable: false,
             transition: 'overlay',
@@ -66,15 +66,27 @@ var eles, a, Behaviour = {
         eles.node_name_input.on("input", Behaviour.changeNodeLabel);
     },
 
+    simulate: function(){
+        Graph.evaluate();
+        eles.tag_editor.empty();
+        for(var resource in environment.resources) {
+            resource = environment.resources[resource];
+            var new_div = $('<div class="ui segment inverted" style="width:100%; height: 30px;">' + resource.name + "  :  " + resource.value + '</div>');
+            eles.tag_editor.append(new_div);
+        }
+    },
+
     rule_editor: {
         accept_rule: function () {
             if ($('.ui.dimmer.modals').first().hasClass("active") && !$('.ui.dimmer.modals').first().hasClass("animating")) {
                 var code = $('#code_textarea').val();
                 var rule_button = $('<button class="ui button red rule fluid"></button>');
+                Graph.reset_simulation();
                 var result = Evaluator.tokenizer(code, CyA.current_node);
                 if(result.message_type !== "error"){
                     n.create_rules(result.message);
                     $('#error_message').text("all rules ok!");
+                    $('.ui.modal').modal('hide');
                 } else {
                     $('#error_message').text(result.message);
                 }

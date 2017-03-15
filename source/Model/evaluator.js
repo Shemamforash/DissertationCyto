@@ -8,7 +8,7 @@
 var consoleElements, Evaluator = {
     elements: {
         rule_types: ["INTERNAL", "SOURCE", "SINK"],
-        keywords: ["if", "else", "then", "endif", "reset", "min", "max", "VAR", ";", ":", "(", ")"],
+        keywords: ["if", "else", "then", "endif", "reset_simulation", "min", "max", "VAR", ";", ":", "(", ")"],
         conditional_operators: ["<", ">", "<=", ">=", "==", "!="],
         logical_operators: ["&&", "||", "!"],
         assignment_operators: ["*=", "+=", "-=", "/=", "^=", "++", "--", "="],
@@ -34,7 +34,7 @@ var consoleElements, Evaluator = {
             }
             rules[i] = rules[i].trim();
             var rule = {
-                rule_text: rules[i]
+                rule_text: rules[i] + ";"
             };
             rules[i] = rules[i].split(" ");
             var interpretation_result = Evaluator.interpret_rule(rules[i], economy_node);
@@ -43,10 +43,10 @@ var consoleElements, Evaluator = {
                 rule.code = interpretation_result.message;
                 rule.rule_type = interpretation_result.rule_type;
                 validated_rules.push(rule);
+                console.log(economy_node);
                 console.log(interpretation_result);
                 console.log(interpretation_result.message);
-                console.log(eval(interpretation_result.message));
-                // console.log(n.node_list["Node0"].variables["hello"].current_value);
+                // console.log(eval(interpretation_result.message));
             } else {
                 return interpretation_result;
             }
@@ -155,7 +155,7 @@ var consoleElements, Evaluator = {
                         }
                     } else {
                         variable_check_result = Evaluator.check_variables(tokens, economy_node, false);
-                        if (variable_check_result.message_type ==="success") {
+                        if (variable_check_result.message_type === "success") {
                             var rule = Evaluator.create_rule(tokens, economy_node, "anything");
                             rule.rule_type = "INTERNAL";
                             return rule;
@@ -170,7 +170,7 @@ var consoleElements, Evaluator = {
                         if (variable.type === "resource variable") {
                             if (tokens.shift().value == ":") {
                                 var rule = Evaluator.create_rule(tokens, economy_node, "number");
-                                if(rule.message_type === "error"){
+                                if (rule.message_type === "error") {
                                     return rule;
                                 }
                                 rule.rule_type = rule_type;
@@ -486,27 +486,25 @@ var consoleElements, Evaluator = {
                     return Evaluator.wrap_message("error", "max value assignment syntax error");
                 }
 
-            } else if (tokens[i].type === "reset") {
+            } else if (tokens[i].type === "reset_simulation") {
                 if (check_valid_assignment(i)) {
                     reset_value = tokens[i + 2].value;
                 } else {
-                    return Evaluator.wrap_message("error", "reset value assignment syntax error");
+                    return Evaluator.wrap_message("error", "reset_simulation value assignment syntax error");
                 }
             }
         }
 
-        var new_variable = {
-            name: variable_name,
-            current_value: initial_value,
-            initial_value: initial_value,
-            max_value: max_value,
-            min_value: min_value,
-            reset_value: reset_value
-        };
+        var new_variable = "{name:'" + variable_name + "'," +
+            "current_value:" + initial_value + "," +
+            "initial_value:" + initial_value + "," +
+            "max_value:" + max_value + "," +
+            "min_value:" + min_value + "," +
+            "reset_value:" + reset_value + "}";
 
-        economy_node.variables[variable_name] = new_variable;
-
-        return Evaluator.wrap_message("success", "");
+        var code = "n.node_list['" + economy_node.id() + "'].variables['" + variable_name + "'] = " + new_variable;
+        eval(code);
+        return Evaluator.wrap_message("success", code);
 
         function check_valid_assignment(i) {
             if (tokens[i + 1].type !== "=") {
