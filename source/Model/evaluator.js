@@ -8,7 +8,7 @@
 var consoleElements, Evaluator = {
     elements: {
         rule_types: ["INTERNAL", "SOURCE", "SINK"],
-        keywords: ["if", "else", "then", "endif", "reset_simulation", "min", "max", "VAR", ";", ":", "(", ")"],
+        keywords: ["if", "else", "then", "endif", "reset_simulation", "min", "max", "VAR", ";", ":", "(", ")", "random", ","],
         conditional_operators: ["<", ">", "<=", ">=", "===", "!="],
         logical_operators: ["&&", "||", "!"],
         assignment_operators: ["*=", "+=", "-=", "/=", "^=", "++", "--", "="],
@@ -134,6 +134,26 @@ var consoleElements, Evaluator = {
                 return Evaluator.wrap_message("error", "unknown token: " + tokens[i]);
             }
         }
+        for (var i = 0; i < tokens.length; ++i) {
+            if (tokens[i].value === "random") {
+                if (i + 5 < tokens.length &&
+                    tokens[i + 1].value === "(" &&
+                    tokens[i + 2].type === "number" &&
+                    tokens[i + 3].value === ":" &&
+                    tokens[i + 4].type === "number" &&
+                    tokens[i + 5].value === ")") {
+                    var lower_bound = tokens[i + 2].value;
+                    var upper_bound = tokens[i + 4].value;
+                    var range = Math.abs(upper_bound - lower_bound);
+                    tokens.splice(i + 1, 5);
+                    tokens[i].value = "Math.floor(Math.random() * " + range + " + " + lower_bound + ")";
+                    tokens[i].type = "number";
+                } else {
+                    return Evaluator.wrap_message("error", "random integer not correctly formatted should be random ( num : num )");
+                }
+            }
+        }
+
         return Evaluator.tag_ifs(tokens);
     },
     interpret_rule: function (tokens, economy_node) {
@@ -168,7 +188,7 @@ var consoleElements, Evaluator = {
                     variable_check_result = Evaluator.check_variables(tokens, economy_node, false);
                     if (variable_check_result.message_type === "success") {
                         var layer = tokens.shift();
-                        if(layer.type === "number") {
+                        if (layer.type === "number") {
                             layer = layer.value;
                             var variable = tokens.shift();
                             if (variable.type === "resource variable") {
@@ -345,7 +365,7 @@ var consoleElements, Evaluator = {
                 } else {
                     var parsed_then = parse_result.message;
                     var block_type = typeof (eval(parsed_then));
-                    if(block_type === "object"){
+                    if (block_type === "object") {
                         block_type = "number";
                     }
                     if_type = block_type;
@@ -415,7 +435,7 @@ var consoleElements, Evaluator = {
                 } else {
                     return Evaluator.wrap_message("error", "if statement returns incompatible type with outer statement, saw: " + if_type + " expected: " + expected_type);
                 }
-            } else if (next_token.type == "resource variable"){
+            } else if (next_token.type == "resource variable") {
                 next_token.value += ".value";
                 final_stmt += next_token.value;
             } else {
