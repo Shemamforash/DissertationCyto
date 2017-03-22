@@ -46,10 +46,12 @@ var cy, CyA, CyB, CytoGraph = {
         }
     },
     init: function () {
+        var cyjson = load();
         CyA = CytoGraph.attributes;
         CyB = CytoGraph.behaviour;
         cy = cytoscape({
             container: document.getElementById('cy_div'),
+            elements: [],
             layout: {name: 'circle'},
             style: [{
                 selector: 'node',
@@ -65,6 +67,22 @@ var cy, CyA, CyB, CytoGraph = {
             gridSpacing: 80,
             snapToGrid: true
         });
+        if (cyjson !== false) {
+            cy.json(cyjson.cy);
+            n.node_number = cy.elements().nodes().length;
+            for(var i = 0; i < cy.elements().nodes().length; ++i){
+                var new_node = cy.elements().nodes()[i];
+                if(Graph.nodes.add(new_node)){
+                    for(var i = 0; i < cyjson.nodes.length; ++i){
+                        if(cyjson.nodes[i].id === new_node.id()){
+                            new_node.variables = cyjson.nodes[i].variables;
+                            new_node.rules = cyjson.nodes[i].rules;
+                        }
+                    }
+                }
+            }
+        }
+
         CytoGraph.bind();
     },
     bind: function () {
@@ -83,7 +101,7 @@ var cy, CyA, CyB, CytoGraph = {
                 label: "Node" + n.node_number,
                 id: "Node" + n.node_number
             },
-            position: {x: snap_position.x, y: snap_position.y},
+            position: {x: snap_position.x, y: snap_position.y}
         });
         if (!Graph.nodes.add(new_node)) {
             cy.remove(new_node);

@@ -1,11 +1,10 @@
 /**
  * Created by Sam on 20/01/2017.
  */
-var e, n, r, Graph = {
+var e, n, Graph = {
     init: function () {
         e = Graph.edges;
         n = Graph.nodes;
-        r = Graph.resources;
     },
     edges: {
         edge_list: [],
@@ -71,9 +70,9 @@ var e, n, r, Graph = {
             if (n.node_overlaps(x, y, id)) {
                 return false;
             }
-            n.node_number++;
             cy_node.variables = {};
             cy_node.rules = [];
+            n.node_number++;
             n.node_list[id] = cy_node;
             return true;
         },
@@ -86,12 +85,6 @@ var e, n, r, Graph = {
                 graph_node.x = node.position().x;
                 graph_node.y = node.position().y;
             }
-        }
-    },
-    getAsJSON: function () {
-        return {
-            nodes: nodes,
-            edges: edges
         }
     },
     reset_simulation: function () {
