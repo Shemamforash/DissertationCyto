@@ -52,13 +52,13 @@ var Behaviour = (function () {
 
         });
         $('#cancel_rule_button').click(function () {
-            rule_editor.discard_rule();
+            discard_rule();
         });
         $('#accept_rule_button').click(function () {
-            rule_editor.accept_rule();
+            accept_rule();
         });
         $('#accept_rule').click(function () {
-            rule_editor.accept_rule();
+            accept_rule();
         })
         elements.node_name_input.on("input", change_node_label);
     }
@@ -80,8 +80,9 @@ var Behaviour = (function () {
     function simulate() {
         Graph.evaluate();
         elements.tag_editor.empty();
-        for (var resource in Graph.resources) {
-            resource = Graph.resources[resource];
+        var resources = Graph.get_resources();
+        for (var resource in resources) {
+            resource = resources[resource];
             var new_div = $('<div class="ui segment inverted" style="width:100%; height: 30px;">' + resource.name + "  :  " + resource.value + '</div>');
             elements.tag_editor.append(new_div);
         }
@@ -92,9 +93,9 @@ var Behaviour = (function () {
             var code = $('#code_textarea').val();
             var rule_button = $('<button class="ui button red rule fluid"></button>');
             Graph.reset_simulation();
-            var result = Evaluator.tokenizer(code, CyA.current_node);
+            var result = Evaluator(code, CytoGraph.get_current_node());
             if (result.message_type !== "error") {
-                n.create_rules(result.message);
+                Graph.create_rules(result.message);
                 $('#error_message').text("all rules ok!");
                 $('.ui.modal').modal('hide');
             } else {
@@ -108,8 +109,8 @@ var Behaviour = (function () {
     }
 
     function update_node_sidebar() {
-        var node = CyA.current_node;
-        $('#code_textarea').val(n.get_rules_as_string());
+        var node = CytoGraph.get_current_node();
+        $('#code_textarea').val(Graph.get_rules_as_string());
         $('#node_name_input').val(node.data().label);
     }
 
@@ -198,6 +199,6 @@ var Behaviour = (function () {
     }
 
     function change_node_label() {
-        CyA.current_node.data('label', elements.node_name_input.val());
+        CytoGraph.get_current_node().data('label', elements.node_name_input.val());
     }
 });

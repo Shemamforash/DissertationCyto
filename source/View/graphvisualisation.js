@@ -9,13 +9,14 @@ var CytoGraph = (function () {
         select_node: function (event) {
             var target = event.cyTarget;
             if (target !== cy) {
-                current_node = Graph.nodes[target.id()];
+                console.log(target.id());
+                current_node = Graph.get_nodes()[target.id()];
                 Behaviour.update_node_sidebar();
             }
         },
         change_or_move_node: function (event) {
             if (current_node) {
-                Graph.nodes.update_position(current_node);
+                Graph.update_position(current_node);
             }
             if (event.cyTarget === cy || event.cyTarget.group() !== "nodes") {
                 Behaviour.toggle_node_sidebar(false);
@@ -46,41 +47,9 @@ var CytoGraph = (function () {
     };
     init();
     function init() {
-        var cyjson = load();
-        cy = cytoscape({
-            container: document.getElementById('cy_div'),
-            elements: [],
-            layout: {name: 'circle'},
-            style: [{
-                selector: 'node',
-                style: {
-                    'shape': 'rectangle',
-                    'label': 'data(label)'
-                }
-            }]
-        });
-        cy.minZoom(0.5);
-        cy.maxZoom(3);
-        cy.snapToGrid({
-            gridSpacing: 80,
-            snapToGrid: true
-        });
-        if (cyjson !== false) {
-            cy.json(cyjson.cy);
-            Graph.node_number = cy.elements().nodes().length;
-            for (var i = 0; i < cy.elements().nodes().length; ++i) {
-                var new_node = cy.elements().nodes()[i];
-                if (Graph.add_node(new_node)) {
-                    for (var i = 0; i < cyjson.nodes.length; ++i) {
-                        if (cyjson.nodes[i].id === new_node.id()) {
-                            new_node.variables = cyjson.nodes[i].variables;
-                            new_node.rules = cyjson.nodes[i].rules;
-                        }
-                    }
-                }
-            }
-        }
-
+        cy = load_graph();
+        load_nodes(cy);
+        load_resources();
         bind();
     }
 
@@ -106,15 +75,17 @@ var CytoGraph = (function () {
     return {
         behaviour: behaviour,
         add_node: function (event) {
-            var snap_position = CytoGraph.mouse_to_world_coordinates(event.x, event.y);
+            var snap_position = mouse_to_world_coordinates(event.x, event.y);
             var new_node = cy.add({
                 group: "nodes",
                 data: {
-                    label: "Node" + n.node_number,
-                    id: "Node" + n.node_number
+                    label: "Node" + Graph.get_node_number(),
+                    id: "Node" + Graph.get_node_number()
                 },
                 position: {x: snap_position.x, y: snap_position.y}
             });
+            new_node.variables = {};
+            new_node.rules = [];
             if (!Graph.add_node(new_node)) {
                 cy.remove(new_node);
             }
@@ -132,6 +103,12 @@ var CytoGraph = (function () {
                     easing: "spring(500, 20)"
                 });
             }
+        },
+        get_current_node: function(){
+            return current_node;
+        },
+        get_cy: function(){
+            return cy;
         }
     };
 });
