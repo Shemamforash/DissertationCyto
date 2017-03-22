@@ -3,10 +3,10 @@
  */
 
 $(document).ready(function () {
-    Behaviour.init();
-    Graph.init();
-    Evaluator.init();
-    CytoGraph.init();
+    Evaluator = Evaluator();
+    Behaviour = Behaviour();
+    Graph = Graph();
+    CytoGraph = CytoGraph();
 });
 
 $(window).on("beforeunload", save);
@@ -24,13 +24,13 @@ function save() {
         });
     }
     localStorage.nodes = JSON.stringify(saved_nodes);
-    localStorage.resources = JSON.stringify(environment.resources);
+    localStorage.resources = JSON.stringify(Graph.resources);
 }
 
 function load() {
     if (localStorage.previous_graph !== undefined) {
         var node_list = JSON.parse(localStorage.nodes);
-        environment.resources = JSON.parse(localStorage.resources);
+        Graph.resources = JSON.parse(localStorage.resources);
         return {cy: JSON.parse(localStorage.previous_graph), nodes: node_list};
     }
     return false;

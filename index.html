@@ -17,7 +17,6 @@
 
     <!--internal js-->
     <script src="source/Model/evaluator.js"></script>
-    <script src="source/Model/environment.js"></script>
     <script src="source/Model/graphbackend.js"></script>
     <script src="source/View/graphvisualisation.js"></script>
     <script src="source/View/htmlbehaviour.js"></script>
@@ -81,7 +80,7 @@
 <div id="main_container" class="full_screen pusher">
     <div id="cy_div" class="full_screen" ondblclick="CytoGraph.add_node(event)"></div>
     <button class="ui button attached fluid green" id="sidebar_opener"
-            onclick="Behaviour.toggleGraphSidebar()"></button>
+            onclick="Behaviour.toggle_graph_sidebar()"></button>
 </div>
 
 </body>

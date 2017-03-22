@@ -1,96 +1,90 @@
 /**
  * Created by Sam on 20/01/2017.
  */
-var e, n, Graph = {
-    init: function () {
-        e = Graph.edges;
-        n = Graph.nodes;
-    },
-    edges: {
-        edge_list: [],
-        add: function (edge) {
-            var source = edge.source().id();
-            var target = edge.target().id();
-            console.log("Desired edge: " + source + " ::::: " + target);
-            for (var i = 0; i < e.edge_list.length; ++i) {
-                var existing_edge = e.edge_list[i];
-                var edge_source = existing_edge.source().id();
-                var edge_target = existing_edge.target().id()
-                console.log("Existing edge: " + edge_source + " ::::: " + edge_target);
-                if ((edge_source === source && edge_target === target) || (edge_target === source && edge_source === target)) {
-                    console.log("exists");
-                    return false;
-                }
-                console.log("     ");
-            }
-            e.edge_list.push(edge);
-            return true;
-        }
-    },
-    nodes: {
-        node_number: 0,
-        node_list: {},
-        create_rules: function (rules) {
-            var graph_node = CyA.current_node;
-            if (graph_node) {
-                graph_node.rules = [];
-                for (var i = 0; i < rules.length; ++i) {
-                    var new_rule = null;
-                    new_rule = {
-                        rule_text: rules[i].rule_text,
-                        code: rules[i].code,
-                        rule_type: rules[i].rule_type,
-                        layer: rules[i].layer
-                    };
-                    graph_node.rules.push(new_rule);
-                }
-            }
-        },
-        get_rules_as_string: function () {
-            var existing_rules = CyA.current_node.rules;
-            var rule_string = "";
-            for (var i = 0; i < existing_rules.length; ++i) {
-                rule_string += existing_rules[i].rule_text + "\n";
-            }
-            return rule_string;
-        },
-        node_overlaps: function (x, y, id) {
-            for (var node in n.node_list) {
-                node = n.node_list[node];
-                if (node.x === x && node.y === y && id !== node.id) {
-                    return true;
-                }
-            }
-            return false;
-        },
-        add: function (cy_node) {
-            var x = cy_node.position().x;
-            var y = cy_node.position().y;
-            var id = cy_node.id();
-            if (n.node_overlaps(x, y, id)) {
+var Graph = (function(){
+    var edges = [];
+    var nodes = {};
+    var node_number = 0;
+    var resources = {};
+
+    function add_edge (edge) {
+        var source = edge.source().id();
+        var target = edge.target().id();
+        console.log("Desired edge: " + source + " ::::: " + target);
+        for (var i = 0; i < edges.length; ++i) {
+            var existing_edge = edges[i];
+            var edge_source = existing_edge.source().id();
+            var edge_target = existing_edge.target().id()
+            console.log("Existing edge: " + edge_source + " ::::: " + edge_target);
+            if ((edge_source === source && edge_target === target) || (edge_target === source && edge_source === target)) {
+                console.log("exists");
                 return false;
             }
-            cy_node.variables = {};
-            cy_node.rules = [];
-            n.node_number++;
-            n.node_list[id] = cy_node;
-            return true;
-        },
-        update_position: function (node) {
-            var graph_node = n.node_list[node.id()];
-            if (n.node_overlaps(node.position().x, node.position().y, node.id())) {
-                node.position().x = graph_node.x;
-                node.position().y = graph_node.y;
-            } else {
-                graph_node.x = node.position().x;
-                graph_node.y = node.position().y;
+            console.log("     ");
+        }
+        edges.push(edge);
+        return true;
+    }
+    function create_rules (rules) {
+        var graph_node = CyA.current_node;
+        if (graph_node) {
+            graph_node.rules = [];
+            for (var i = 0; i < rules.length; ++i) {
+                var new_rule = null;
+                new_rule = {
+                    rule_text: rules[i].rule_text,
+                    code: rules[i].code,
+                    rule_type: rules[i].rule_type,
+                    layer: rules[i].layer
+                };
+                graph_node.rules.push(new_rule);
             }
         }
-    },
-    reset_simulation: function () {
+    }
+    function get_rules_as_string () {
+        var existing_rules = CyA.current_node.rules;
+        var rule_string = "";
+        for (var i = 0; i < existing_rules.length; ++i) {
+            rule_string += existing_rules[i].rule_text + "\n";
+        }
+        return rule_string;
+    }
+    function node_overlaps (x, y, id) {
+        for (var node in nodes) {
+            node = nodes[node];
+            if (node.x === x && node.y === y && id !== node.id) {
+                return true;
+            }
+        }
+        return false;
+    }
+    function add_node (cy_node) {
+        var x = cy_node.position().x;
+        var y = cy_node.position().y;
+        var id = cy_node.id();
+        if (node_overlaps(x, y, id)) {
+            return false;
+        }
+        cy_node.variables = {};
+        cy_node.rules = [];
+        node_number++;
+        nodes[id] = cy_node;
+        return true;
+    }
+    function update_position (node) {
+        var graph_node = nodes[node.id()];
+        if (node_overlaps(node.position().x, node.position().y, node.id())) {
+            node.position().x = graph_node.x;
+            node.position().y = graph_node.y;
+        } else {
+            graph_node.x = node.position().x;
+            graph_node.y = node.position().y;
+        }
+    }
+    function reset_simulation () {
         environment.reset_variables();
-        for (var node in n.node_list) {
-            node = n.node_list[node];
+        for (var node in nodes) {
+            node = nodes[node];
             node.variables = [];
             console.log(node);
             for (var i = 0; i < node.rules.length; ++i) {
@@ -99,7 +93,7 @@ var e, n, Graph = {
                     eval(node.rules[i].code);
                 }
             }
-            for(var variable in n.variables){
+            for (var variable in n.variables) {
                 variable.watch("current_value", function () {
                     if (this.max_value !== undefined && this.current_value > this.max_value) {
                         this.current_value = this.max_value;
@@ -109,12 +103,12 @@ var e, n, Graph = {
                 });
             }
         }
-    },
-    evaluate: function () {
+    }
+    function evaluate () {
         var i;
         var internal_rules = [], source_rules = [], sink_rules = [];
-        for (var node in n.node_list) {
-            node = n.node_list[node];
+        for (var node in nodes) {
+            node = nodes[node];
             for (i = 0; i < node.variables.length; ++i) {
                 var reset_value = node.variables[i].reset_value;
                 if (reset_value !== undefined) {
@@ -141,7 +135,7 @@ var e, n, Graph = {
             }
         }
 
-        function compare(a,b) {
+        function compare(a, b) {
             return a.layer - b.layer;
         }
 
@@ -158,4 +152,35 @@ var e, n, Graph = {
             eval(sink_rules[i].code);
         }
     }
-};
+    function create_resource(name){
+        if(!environment.resources.hasOwnProperty(name)){
+            environment.resources[name] = {
+                name: name,
+                value: 0,
+                increment: function(amnt){
+                    this.value += amnt;
+                },
+                decrement: function(amnt){
+                    this.value -= amnt;
+                }
+            };
+        }
+        return environment.resources[name];
+    }
+    function reset_variables() {
+        resources = {};
+    }
+
+    return {
+        add_edge: add_edge,
+        create_rules: create_rules,
+        get_rules_as_string: get_rules_as_string,
+        node_overlaps: node_overlaps,
+        add_node: add_node,
+        update_position: update_position,
+        reset_simulation: reset_simulation,
+        evaluate: evaluate,
+        create_resource: create_resource,
+        reset_variables: reset_variables
+    };
+});

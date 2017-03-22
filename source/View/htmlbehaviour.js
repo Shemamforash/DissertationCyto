@@ -1,8 +1,9 @@
 /**
  * Created by Sam on 22/01/2017.
  */
-var eles, a, Behaviour = {
-    elements: function () {
+var Behaviour = (function () {
+    var editing = false;
+    var elements = function () {
         return {
             graph_sidebar: $('#graph_sidebar'),
             node_sidebar: $('#node_sidebar'),
@@ -13,17 +14,13 @@ var eles, a, Behaviour = {
             node_name_input: $('#node_name_input'),
             simulate_button: $('#simulate_step_button'),
             tag_editor: $('#tag_editor')
-        }
-    },
-    attributes: {
-        editing: false
-    },
-    init: function () {
-        eles = Behaviour.elements();
-        a = Behaviour.attributes;
-        Behaviour.bind();
-    },
-    bind: function () {
+        };
+    };
+
+    bind();
+
+    function bind() {
+        elements = elements();
         $('.ui.accordion').accordion({
             exclusive: false
         });
@@ -34,109 +31,122 @@ var eles, a, Behaviour = {
             dimPage: false,
             exclusive: true,
         });
-        eles.simulate_button.click(Behaviour.simulate);
-        eles.node_sidebar.sidebar({
+        elements.simulate_button.click(simulate);
+        elements.node_sidebar.sidebar({
             closable: false,
             transition: 'overlay',
             dimPage: false,
             exclusive: true
         });
-        eles.sidebar_opener.hover(function () {
+        elements.sidebar_opener.hover(function () {
             $(this).width("40px");
             $(this).text(">");
         }, function () {
             $(this).width("15px");
             $(this).text("");
         });
-        eles.edit_node_name.click(Behaviour.editNodeName);
-        eles.rules_editor_opener.click(function () {
+        elements.edit_node_name.click(edit_node_name);
+        elements.rules_editor_opener.click(function () {
             $('#rule_name_input').val("");
-            $(eles.rules_editor).modal('show');
+            $(elements.rules_editor).modal('show');
 
         });
         $('#cancel_rule_button').click(function () {
-            Behaviour.rule_editor.discard_rule();
+            rule_editor.discard_rule();
         });
         $('#accept_rule_button').click(function () {
-            Behaviour.rule_editor.accept_rule();
+            rule_editor.accept_rule();
         });
-        $('#accept_rule').click(function(){
-            Behaviour.rule_editor.accept_rule();
+        $('#accept_rule').click(function () {
+            rule_editor.accept_rule();
         })
-        eles.node_name_input.on("input", Behaviour.changeNodeLabel);
-    },
+        elements.node_name_input.on("input", change_node_label);
+    }
 
-    simulate: function(){
+    return {
+        simulate: simulate,
+        accept_rule: accept_rule,
+        discard_rule: discard_rule,
+        update_node_sidebar: update_node_sidebar,
+        add_tag: add_tag,
+        start_editing: start_editing,
+        finish_editing: finish_editing,
+        delete_tag: delete_tag,
+        edit_node_name: edit_node_name,
+        toggle_graph_sidebar: toggle_graph_sidebar,
+        toggle_node_sidebar: toggle_node_sidebar,
+        change_node_label: change_node_label,
+    };
+    function simulate() {
         Graph.evaluate();
-        eles.tag_editor.empty();
-        for(var resource in environment.resources) {
-            resource = environment.resources[resource];
+        elements.tag_editor.empty();
+        for (var resource in Graph.resources) {
+            resource = Graph.resources[resource];
             var new_div = $('<div class="ui segment inverted" style="width:100%; height: 30px;">' + resource.name + "  :  " + resource.value + '</div>');
-            eles.tag_editor.append(new_div);
+            elements.tag_editor.append(new_div);
         }
-    },
+    }
 
-    rule_editor: {
-        accept_rule: function () {
-            if ($('.ui.dimmer.modals').first().hasClass("active") && !$('.ui.dimmer.modals').first().hasClass("animating")) {
-                var code = $('#code_textarea').val();
-                var rule_button = $('<button class="ui button red rule fluid"></button>');
-                Graph.reset_simulation();
-                var result = Evaluator.tokenizer(code, CyA.current_node);
-                if(result.message_type !== "error"){
-                    n.create_rules(result.message);
-                    $('#error_message').text("all rules ok!");
-                    $('.ui.modal').modal('hide');
-                } else {
-                    $('#error_message').text(result.message);
-                }
+    function accept_rule() {
+        if ($('.ui.dimmer.modals').first().hasClass("active") && !$('.ui.dimmer.modals').first().hasClass("animating")) {
+            var code = $('#code_textarea').val();
+            var rule_button = $('<button class="ui button red rule fluid"></button>');
+            Graph.reset_simulation();
+            var result = Evaluator.tokenizer(code, CyA.current_node);
+            if (result.message_type !== "error") {
+                n.create_rules(result.message);
+                $('#error_message').text("all rules ok!");
+                $('.ui.modal').modal('hide');
+            } else {
+                $('#error_message').text(result.message);
             }
-        },
-        discard_rule: function () {
-            $('.ui.modal').modal('hide');
         }
-    },
+    }
 
-    update_node_sidebar: function(){
+    function discard_rule() {
+        $('.ui.modal').modal('hide');
+    }
+
+    function update_node_sidebar() {
         var node = CyA.current_node;
         $('#code_textarea').val(n.get_rules_as_string());
         $('#node_name_input').val(node.data().label);
-    },
+    }
 
-    addTag: function () {
+    function add_tag() {
         var element = $('<div class="ui input inverted transparent tag_edit right labelled">' +
             '<input type="text" placeholder="Tag name...">' +
             '<div class="ui buttons">' +
             '</div>' +
             '</div>');
-        Behaviour.finish_editing(element);
-        eles.tag_editor.before(element);
-    },
+        finish_editing(element);
+        elements.tag_editor.before(element);
+    }
 
-    start_editing: function (element) {
+    function start_editing(element) {
         var button_group = $(element).find('.ui.buttons');
         var delete_button = $('<div class="ui button icon inverted white right attached delete_button">' +
             '<i class="remove icon"></i></div>');
         delete_button.click(function () {
-            Behaviour.delete_tag(element);
+            delete_tag(element);
         });
         var done_button = $('<div class="ui button icon inverted white right attached delete_button">' +
             '<i class="checkmark icon"></i></div>');
         done_button.click(function () {
-            Behaviour.finish_editing(element);
+            finish_editing(element);
         });
         button_group.html("");
         button_group.append(delete_button);
         button_group.append(done_button);
         $(element).toggleClass("disabled");
-    },
+    }
 
-    finish_editing: function (element) {
+    function finish_editing(element) {
         var button_group = $(element).find('.ui.buttons');
         var edit_button = $('<div class="ui button icon inverted white right attached edit_button">' +
             '<i class="edit icon"></i></div>');
         edit_button.click(function () {
-            Behaviour.start_editing(element)
+            start_editing(element)
         });
         button_group.html("");
         button_group.append(edit_button);
@@ -149,9 +159,9 @@ var eles, a, Behaviour = {
         } else {
             $(element).find('input').val(old_name);
         }
-    },
+    }
 
-    delete_tag: function (element) {
+    function delete_tag(element) {
         var tag_name = $(element).attr("id");
         if (tag_name !== "") {
             if (!Graph.resources.remove(tag_name)) {
@@ -160,34 +170,34 @@ var eles, a, Behaviour = {
                 $(element).remove();
             }
         }
-    },
+    }
 
-    editNodeName: function () {
-        var icon = eles.edit_node_name.find('.icon');
+    function edit_node_name() {
+        var icon = elements.edit_node_name.find('.icon');
         icon.toggleClass('edit');
         icon.toggleClass('checkmark');
-        eles.edit_node_name.parent().toggleClass('disabled');
-    },
+        elements.edit_node_name.parent().toggleClass('disabled');
+    }
 
-    toggleGraphSidebar: function () {
-        if (eles.graph_sidebar.hasClass('visible')) {
-            eles.graph_sidebar.sidebar('hide');
+    function toggle_graph_sidebar() {
+        if (elements.graph_sidebar.hasClass('visible')) {
+            elements.graph_sidebar.sidebar('hide');
         } else {
-            eles.graph_sidebar.sidebar('show');
+            elements.graph_sidebar.sidebar('show');
         }
-    },
+    }
 
-    toggleNodeSidebar: function (open) {
+    function toggle_node_sidebar(open) {
         if (open) {
-            if (!eles.node_sidebar.hasClass('visible')) {
-                eles.node_sidebar.sidebar('show');
+            if (!elements.node_sidebar.hasClass('visible')) {
+                elements.node_sidebar.sidebar('show');
             }
         } else {
-            eles.node_sidebar.sidebar('hide');
+            elements.node_sidebar.sidebar('hide');
         }
-    },
-
-    changeNodeLabel: function () {
-        CyA.current_node.data('label', eles.node_name_input.val());
     }
-};
+
+    function change_node_label() {
+        CyA.current_node.data('label', elements.node_name_input.val());
+    }
+});
