@@ -14,6 +14,9 @@ var Behaviour = (function () {
             node_name_input: $('#node_name_input'),
             simulate_button: $('#simulate_step_button'),
             reset_button: $('#reset_button'),
+            save_button: $('#save_button'),
+            load_button: $('#load_button'),
+            file_selector: $('#file_selector'),
             tag_editor: $('#tag_editor')
         };
     };
@@ -53,6 +56,10 @@ var Behaviour = (function () {
 
         });
         elements.reset_button.click(reset_during_edit);
+        elements.save_button.click(save_graph_to_file);
+        elements.load_button.click(function(){elements.file_selector.click()});
+        elements.file_selector.multiple = false;
+        elements.file_selector.on("change", load_graph_from_file);
         $('#cancel_rule_button').click(function () {
             discard_rule();
         });
@@ -63,6 +70,23 @@ var Behaviour = (function () {
             accept_rule();
         })
         elements.node_name_input.on("input", change_node_label);
+    }
+
+    function save_graph_to_file() {
+
+    }
+
+    function load_graph_from_file() {
+        var files = this.files;
+        var fr = new FileReader();
+        if (files.length === 1) {
+            fr.onload = function (event) {
+                var result = JSON.parse(event.target.result);
+                console.log(result);
+            };
+            fr.readAsText(files.item(0));
+        }
+        elements.file_selector.value = null;
     }
 
     return {
@@ -76,7 +100,7 @@ var Behaviour = (function () {
         change_node_label: change_node_label,
     };
 
-    function reset_during_edit(){
+    function reset_during_edit() {
         Graph.reset_simulation();
         elements.tag_editor.empty();
     }
