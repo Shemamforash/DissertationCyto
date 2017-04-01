@@ -5,8 +5,8 @@
     <title>Economy Simulator</title>
 
     <!--css-->
-    <link rel="stylesheet" href="stylesheets/sassycyto.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/semantic-ui/2.2.8/semantic.min.css">
+    <link rel="stylesheet" href="stylesheets/sassycyto.css">
 
     <!--external js-->
     <script src="http://code.jquery.com/jquery-2.0.3.min.js"></script>
@@ -31,12 +31,16 @@
     <div class="ui segment inverted" style="height: calc(100% - 60px); margin: 0px; padding: 0px; overflow: hidden;">
         <div class="ui title inverted green h1 icon" style="height: 30px"><i class="icon tags inverted green"></i>Resources
         </div>
-        <div class="content inverted" id="tag_editor">
+        <div class="content inverted ui buttons vertical fluid" id="tag_editor">
         </div>
     </div>
     <div class="ui center aligned segment inverted" style="height: 60px; margin: 0px; padding: 0px;">
         <div class="ui button icon inverted green" id="simulate_step_button" style="height: 100%; width: 60px;"><i
                 class="icon chevron right inverted green large"></i>
+        </div>
+        <div class="ui button icon inverted green" id="reset_button" style="height: 100%, width: 60px"><i
+                class="icon undo"></i>
+        </div>
         </div>
     </div>
 </div>
@@ -57,7 +61,10 @@
 <div class="ui modal" id="rules_modal" style="padding: 5px; background-color: #1b1c1d;">
     <div class="ui secondary menu inverted" style="height: 50px; margin: 0px; padding: 5px;">
         <div class="item" style="width: calc(100% - 150px); margin: 0px;">
-            <div class="ui inverted header" style="background-color: #1b1c1d; color: white;">Rule Editor</div>
+            <h2 class="ui header" style="background-color: #1b1c1d; color: white;">
+                <i class="icon terminal"></i>
+                <div class="content">Rule Editor</div>
+            </h2>
         </div>
         <div class="item" style="width:150px; margin: 0px;">
             <button class="ui fluid button inverted red icon" id="cancel_rule_button">
@@ -71,7 +78,7 @@
             INTERNAL hello = if ( 2 < 3 ) && true then hello += hello + if true then hello else 5 endif else 0 endif;
         SOURCE health : 7;</textarea>
         <div id="error_message" style="width: 100%; height: 10%; background-color: transparent; color: white; padding-top: 6px;">No Errors</div>
-        <div class="ui button green inverted" id="accept_rule" style="width: 100%; height: 10%">Save Rules</div>
+        <div class="ui button green inverted" id="accept_rule" style="width: 100%; height: 10%"><i class="icon save large"></i>Save</div>
     </div>
 
 </div>

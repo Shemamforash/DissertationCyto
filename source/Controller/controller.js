@@ -2,6 +2,8 @@
  * Created by Sam on 26/01/2017.
  */
 
+//For external reading https://jsfiddle.net/Ln37kqc0/
+
 $(document).ready(function () {
     Evaluator = Evaluator();
     Behaviour = Behaviour();
@@ -49,7 +51,6 @@ function load_graph(){
         snapToGrid: true
     });
     if(localStorage.previous_graph !== undefined && localStorage.previous_graph !== "undefined"){
-        console.log("bacon");
         cy.json(JSON.parse(localStorage.previous_graph));
     }
     return cy;
@@ -71,9 +72,13 @@ function load_nodes(cy){
                 rule_node = stored_nodes[j];
                 if(rule_node.id === graph_node.id()){
                     console.log(rule_node.variables);
-                    console.log(rule_node.rules);
                     graph_node.variables = rule_node.variables;
+                    for(var variable in graph_node.variables){
+                        variable = graph_node.variables[variable];
+                        variable.current_value = variable.initial_value;
+                    }
                     graph_node.rules = rule_node.rules;
+                    graph_node.resource_tags = [];
                     Graph.add_node(graph_node);
                 }
             }

@@ -13,6 +13,7 @@ var Behaviour = (function () {
             rules_editor_opener: $('#add_rule'),
             node_name_input: $('#node_name_input'),
             simulate_button: $('#simulate_step_button'),
+            reset_button: $('#reset_button'),
             tag_editor: $('#tag_editor')
         };
     };
@@ -51,6 +52,7 @@ var Behaviour = (function () {
             $(elements.rules_editor).modal('show');
 
         });
+        elements.reset_button.click(reset_during_edit);
         $('#cancel_rule_button').click(function () {
             discard_rule();
         });
@@ -68,22 +70,24 @@ var Behaviour = (function () {
         accept_rule: accept_rule,
         discard_rule: discard_rule,
         update_node_sidebar: update_node_sidebar,
-        add_tag: add_tag,
-        start_editing: start_editing,
-        finish_editing: finish_editing,
-        delete_tag: delete_tag,
         edit_node_name: edit_node_name,
         toggle_graph_sidebar: toggle_graph_sidebar,
         toggle_node_sidebar: toggle_node_sidebar,
         change_node_label: change_node_label,
     };
+
+    function reset_during_edit(){
+        Graph.reset_simulation();
+        elements.tag_editor.empty();
+    }
+
     function simulate() {
         Graph.evaluate();
         elements.tag_editor.empty();
         var resources = Graph.get_resources();
         for (var resource in resources) {
             resource = resources[resource];
-            var new_div = $('<div class="ui segment inverted" style="width:100%; height: 30px;">' + resource.name + "  :  " + resource.value + '</div>');
+            var new_div = $('<div class="ui button inverted green resource_button">' + resource.name + "  :  " + resource.value + '</div>');
             elements.tag_editor.append(new_div);
         }
     }
@@ -112,65 +116,6 @@ var Behaviour = (function () {
         var node = CytoGraph.get_current_node();
         $('#code_textarea').val(Graph.get_rules_as_string());
         $('#node_name_input').val(node.data().label);
-    }
-
-    function add_tag() {
-        var element = $('<div class="ui input inverted transparent tag_edit right labelled">' +
-            '<input type="text" placeholder="Tag name...">' +
-            '<div class="ui buttons">' +
-            '</div>' +
-            '</div>');
-        finish_editing(element);
-        elements.tag_editor.before(element);
-    }
-
-    function start_editing(element) {
-        var button_group = $(element).find('.ui.buttons');
-        var delete_button = $('<div class="ui button icon inverted white right attached delete_button">' +
-            '<i class="remove icon"></i></div>');
-        delete_button.click(function () {
-            delete_tag(element);
-        });
-        var done_button = $('<div class="ui button icon inverted white right attached delete_button">' +
-            '<i class="checkmark icon"></i></div>');
-        done_button.click(function () {
-            finish_editing(element);
-        });
-        button_group.html("");
-        button_group.append(delete_button);
-        button_group.append(done_button);
-        $(element).toggleClass("disabled");
-    }
-
-    function finish_editing(element) {
-        var button_group = $(element).find('.ui.buttons');
-        var edit_button = $('<div class="ui button icon inverted white right attached edit_button">' +
-            '<i class="edit icon"></i></div>');
-        edit_button.click(function () {
-            start_editing(element)
-        });
-        button_group.html("");
-        button_group.append(edit_button);
-        $(element).toggleClass("disabled");
-
-        var tag_name = $(element).find('input').val();
-        var old_name = $(element).attr("id");
-        if (Graph.resources.update($(element).attr("id"), tag_name)) {
-            $(element).attr("id", tag_name);
-        } else {
-            $(element).find('input').val(old_name);
-        }
-    }
-
-    function delete_tag(element) {
-        var tag_name = $(element).attr("id");
-        if (tag_name !== "") {
-            if (!Graph.resources.remove(tag_name)) {
-                console.log("Tag did not exist for some reason..." + tag_name);
-            } else {
-                $(element).remove();
-            }
-        }
     }
 
     function edit_node_name() {

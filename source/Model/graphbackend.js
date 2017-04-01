@@ -1,13 +1,13 @@
 /**
  * Created by Sam on 20/01/2017.
  */
-var Graph = (function(){
+var Graph = (function () {
     var edges = [];
     var nodes = {};
     var node_number = 0;
     var resources = {};
 
-    function add_edge (edge) {
+    function add_edge(edge) {
         var source = edge.source().id();
         var target = edge.target().id();
         console.log("Desired edge: " + source + " ::::: " + target);
@@ -25,7 +25,8 @@ var Graph = (function(){
         edges.push(edge);
         return true;
     }
-    function create_rules (rules) {
+
+    function create_rules(rules) {
         var graph_node = CytoGraph.get_current_node();
         if (graph_node) {
             graph_node.rules = [];
@@ -41,7 +42,8 @@ var Graph = (function(){
             }
         }
     }
-    function get_rules_as_string () {
+
+    function get_rules_as_string() {
         var existing_rules = CytoGraph.get_current_node().rules;
         var rule_string = "";
         for (var i = 0; i < existing_rules.length; ++i) {
@@ -49,7 +51,8 @@ var Graph = (function(){
         }
         return rule_string;
     }
-    function node_overlaps (x, y, id) {
+
+    function node_overlaps(x, y, id) {
         for (var node in nodes) {
             node = nodes[node];
             if (node.x === x && node.y === y && id !== node.id) {
@@ -58,7 +61,8 @@ var Graph = (function(){
         }
         return false;
     }
-    function add_node (cy_node) {
+
+    function add_node(cy_node) {
         var x = cy_node.position().x;
         var y = cy_node.position().y;
         var id = cy_node.id();
@@ -69,7 +73,8 @@ var Graph = (function(){
         nodes[id] = cy_node;
         return true;
     }
-    function update_position (node) {
+
+    function update_position(node) {
         var graph_node = nodes[node.id()];
         if (node_overlaps(node.position().x, node.position().y, node.id())) {
             node.position().x = graph_node.x;
@@ -79,31 +84,22 @@ var Graph = (function(){
             graph_node.y = node.position().y;
         }
     }
-    function reset_simulation () {
+
+    function reset_simulation() {
         reset_variables();
         for (var node in nodes) {
             node = nodes[node];
             node.variables = {};
-            console.log(node);
+            node.resource_tags = [];
             for (var i = 0; i < node.rules.length; ++i) {
-                console.log(node.rules[i]);
                 if (node.rules[i].rule_type === "INTERNAL VAR") {
                     eval(node.rules[i].code);
                 }
             }
-            for (var variable in node.variables) {
-                variable = node.variables[variable];
-                variable.watch("current_value", function () {
-                    if (this.max_value !== undefined && this.current_value > this.max_value) {
-                        this.current_value = this.max_value;
-                    } else if (this.min_value !== undefined && this.current_value < this.min_value) {
-                        this.current_value = this.max_value;
-                    }
-                });
-            }
         }
     }
-    function evaluate () {
+
+    function evaluate() {
         var i;
         var internal_rules = [], source_rules = [], sink_rules = [];
         for (var node in nodes) {
@@ -132,6 +128,14 @@ var Graph = (function(){
                         console.log("invalid rule type " + node.rules[i].rule_type);
                         break;
                 }
+                for (var variable in node.variables) {
+                    variable = node.variables[variable];
+                    if (variable.max_value !== undefined && variable.current_value > variable.max_value) {
+                        variable.current_value = variable.max_value;
+                    } else if (variable.min_value !== undefined && variable.current_value < variable.min_value) {
+                        variable.current_value = variable.max_value;
+                    }
+                }
             }
         }
 
@@ -152,36 +156,46 @@ var Graph = (function(){
             eval(sink_rules[i].code);
         }
     }
-    function create_resource(name){
-        if(!resources.hasOwnProperty(name)){
+
+    function create_resource(name, node) {
+        if (node.resource_tags.indexOf(name) === -1) {
+            node.resource_tags.push(name);
+        }
+        if (!resources.hasOwnProperty(name)) {
             resources[name] = {
                 name: name,
                 value: 0,
-                increment: function(amnt){
+                increment: function (amnt) {
                     this.value += amnt;
                 },
-                decrement: function(amnt){
+                decrement: function (amnt) {
                     this.value -= amnt;
                 }
             };
         }
         return resources[name];
     }
+
     function reset_variables() {
         resources = {};
     }
-    function increase_node_number(){
+
+    function increase_node_number() {
         ++node_number;
     }
-    function get_nodes(){
+
+    function get_nodes() {
         return nodes;
     }
+
     function get_resources() {
         return resources;
     }
-    function get_node_number(){
+
+    function get_node_number() {
         return node_number;
     }
+
     return {
         add_edge: add_edge,
         create_rules: create_rules,

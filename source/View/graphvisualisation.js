@@ -86,6 +86,7 @@ var CytoGraph = (function () {
             });
             new_node.variables = {};
             new_node.rules = [];
+            new_node.resource_tags = [];
             if (!Graph.add_node(new_node)) {
                 cy.remove(new_node);
             }

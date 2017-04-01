@@ -161,6 +161,7 @@ var Evaluator = (function () {
                                     }
                                     rule.rule_type = rule_type;
                                     if (rule_type === "SOURCE") {
+                                        console.log(rule.message);
                                         rule.message = variable.value + ".increment(" + rule.message + ");";
                                         rule.layer = layer;
                                         return rule;
@@ -202,9 +203,9 @@ var Evaluator = (function () {
                     tokens[i].temp_value = eval(tokens[i].value);
                 } else {
                     tokens[i].type = "resource variable";
-                    resource = Graph.create_resource(tokens[i].value);
-                    variable_reference = "Graph.create_resource('" + resource.name + "')";
-                    tokens[i].value = "Graph.create_resource('" + resource.name + "')";
+                    resource = Graph.create_resource(tokens[i].value, economy_node);
+                    variable_reference = "Graph.create_resource('" + resource.name + "', " + "Graph.get_nodes()['" + economy_node.id() + "'])";
+                    tokens[i].value = "Graph.create_resource('" + resource.name + "', " + "Graph.get_nodes()['" + economy_node.id() + "'])";
                     tokens[i].temp_value = eval(tokens[i].value);
                 }
                 elements.original_variable_values.push(variable_reference);
@@ -460,7 +461,8 @@ var Evaluator = (function () {
             "initial_value:" + initial_value + "," +
             "max_value:" + max_value + "," +
             "min_value:" + min_value + "," +
-            "reset_value:" + reset_value + "}";
+            "reset_value:" + reset_value + "}" +
+            "change_value: function(amnt){ if(current_value + amnt > max_value) {current_value = max_value;} else if (current_value - amnt < min_value){current_value = min_value;}}";
 
         var code = "Graph.get_nodes()['" + economy_node.id() + "'].variables['" + variable_name + "'] = " + new_variable;
         eval(code);
