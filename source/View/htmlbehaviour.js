@@ -73,7 +73,17 @@ var Behaviour = (function () {
     }
 
     function save_graph_to_file() {
-
+        var cy_json = CytoGraph.get_cy().json();
+        var saved_nodes = get_nodes_to_save();
+        var save_obj = {
+            cy: JSON.stringify(cy_json),
+            nodes: JSON.stringify(saved_nodes, null, 4),
+        };
+        var data = "text/json; charset=utf-8," + encodeURIComponent(JSON.stringify(save_obj, null, 4));
+        var download_button = $('<a href="data: ' + data + '" download="my_graph.json" id="download_button"></a>');
+        download_button.appendTo(elements.graph_sidebar);
+        $('#download_button')[0].click();
+        download_button.remove();
     }
 
     function load_graph_from_file() {
@@ -82,7 +92,8 @@ var Behaviour = (function () {
         if (files.length === 1) {
             fr.onload = function (event) {
                 var result = JSON.parse(event.target.result);
-                console.log(result);
+                load_graph(result.cy);
+                load_nodes(result.nodes);
             };
             fr.readAsText(files.item(0));
         }

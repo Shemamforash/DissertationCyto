@@ -9,29 +9,35 @@ $(document).ready(function () {
     Behaviour = Behaviour();
     Graph = Graph();
     CytoGraph = CytoGraph();
+    CytoGraph.init();
 });
 
 $(window).on("beforeunload", save);
 
 function save() {
-    var saved_nodes = [], node, existing_nodes = Graph.get_nodes();
+    var saved_nodes = get_nodes_to_save();
     localStorage.previous_graph = JSON.stringify(CytoGraph.get_cy().json());
+    localStorage.nodes = JSON.stringify(saved_nodes);
+}
+
+function get_nodes_to_save() {
+    var saved_nodes = [], node, existing_nodes = Graph.get_nodes();
     for (node in existing_nodes) {
         node = existing_nodes[node];
-        console.log(node.variables["ctr"]);
-        console.log(node.rules);
-        console.log(node.variables);
         saved_nodes.push({
             variables: node.variables,
             rules: node.rules,
             id: node.id()
         });
     }
-    localStorage.nodes = JSON.stringify(saved_nodes);
-    localStorage.resources = JSON.stringify(Graph.resources);
+    return saved_nodes;
 }
 
-function load_graph(){
+// INTERNAL VAR ctr = 2;
+// INTERNAL ctr = if ctr < 10 then ctr + 1 else ctr + 10 endif;
+// SOURCE 0 beans : ctr;
+
+function load_graph(existing_cy) {
     var cy = cytoscape({
         container: document.getElementById('cy_div'),
         elements: [],
@@ -50,30 +56,32 @@ function load_graph(){
         gridSpacing: 80,
         snapToGrid: true
     });
-    if(localStorage.previous_graph !== undefined && localStorage.previous_graph !== "undefined"){
+    if (existing_cy) {
+        cy.json(JSON.parse(existing_cy));
+    } else if (localStorage.previous_graph !== undefined && localStorage.previous_graph !== "undefined") {
         cy.json(JSON.parse(localStorage.previous_graph));
     }
-    return cy;
+    CytoGraph.set_cy(cy);
 }
 
-// INTERNAL VAR ctr = 2;
-// INTERNAL ctr = if ctr < 10 then ctr + 1 else ctr + 10 endif;
-// SOURCE 0 beans : ctr;
-
-function load_nodes(cy){
-    var stored_nodes, existing_nodes, i, graph_node, rule_node;
-    if(localStorage.nodes !== undefined  && localStorage.nodes !== "undefined"){
+function load_nodes(saved_nodes) {
+    var stored_nodes = null, existing_nodes, i, graph_node, rule_node;
+    if (saved_nodes) {
+        stored_nodes = JSON.parse(saved_nodes);
+    } else if (localStorage.nodes !== undefined && localStorage.nodes !== "undefined") {
         stored_nodes = JSON.parse(localStorage.nodes);
-        existing_nodes = cy.elements().nodes();
-        for(i = 0; i < existing_nodes.length; ++i){
+    }
+    if (stored_nodes !== null) {
+        existing_nodes = CytoGraph.get_cy().elements().nodes();
+        for (i = 0; i < existing_nodes.length; ++i) {
             Graph.increase_node_number();
             graph_node = existing_nodes[i];
-            for(var j = 0; j < stored_nodes.length; ++j){
+            for (var j = 0; j < stored_nodes.length; ++j) {
                 rule_node = stored_nodes[j];
-                if(rule_node.id === graph_node.id()){
+                if (rule_node.id === graph_node.id()) {
                     console.log(rule_node.variables);
                     graph_node.variables = rule_node.variables;
-                    for(var variable in graph_node.variables){
+                    for (var variable in graph_node.variables) {
                         variable = graph_node.variables[variable];
                         variable.current_value = variable.initial_value;
                     }
@@ -84,11 +92,4 @@ function load_nodes(cy){
             }
         }
     }
-}
-
-function load_resources(){
-    if(localStorage.resources !== undefined && localStorage.resources !== "undefined"){
-        return JSON.parse(localStorage.resources);
-    }
-    return [];
 }

@@ -2,7 +2,7 @@
  * Created by Sam on 20/01/2017.
  */
 
-var CytoGraph = (function () {
+var CytoGraph = function () {
     var current_node = null;
     var cy = {};
     var behaviour = {
@@ -45,13 +45,6 @@ var CytoGraph = (function () {
             }
         }
     };
-    init();
-    function init() {
-        cy = load_graph();
-        load_nodes(cy);
-        load_resources();
-        bind();
-    }
 
     function bind() {
         //start click
@@ -73,6 +66,14 @@ var CytoGraph = (function () {
     }
 
     return {
+        init: function(){
+            load_graph();
+            load_nodes();
+        },
+        set_cy: function(new_cy){
+            cy = new_cy;
+            bind();
+        },
         behaviour: behaviour,
         add_node: function (event) {
             var snap_position = mouse_to_world_coordinates(event.x, event.y);
@@ -105,11 +106,11 @@ var CytoGraph = (function () {
                 });
             }
         },
-        get_current_node: function(){
-            return current_node;
-        },
         get_cy: function(){
             return cy;
+        },
+        get_current_node: function(){
+            return current_node;
         }
     };
-});
+};
