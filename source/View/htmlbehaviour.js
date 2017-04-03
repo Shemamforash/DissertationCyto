@@ -97,7 +97,7 @@ var Behaviour = (function () {
             };
             fr.readAsText(files.item(0));
         }
-        elements.file_selector.value = null;
+        elements.file_selector.val("");
     }
 
     return {
