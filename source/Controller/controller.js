@@ -15,6 +15,7 @@ $(document).ready(function () {
 $(window).on("beforeunload", save);
 
 function save() {
+    CytoGraph.get_cy().elements().removeClass("highlighted");
     var saved_nodes = get_nodes_to_save();
     localStorage.previous_graph = JSON.stringify(CytoGraph.get_cy().json());
     localStorage.nodes = JSON.stringify(saved_nodes);

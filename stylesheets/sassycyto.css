@@ -18,8 +18,13 @@ body, .full_screen {
   height: 100%; }
 
 #graph_sidebar, #node_sidebar {
-  width: 25%;
   padding: 40px; }
+
+#graph_sidebar {
+  width: 20%; }
+
+#node_sidebar {
+  width: 30%; }
 
 .tag_edit {
   width: 100%; }
@@ -55,5 +60,11 @@ input {
 .user_button {
   height: 100%;
   width: 40px; }
+
+pre {
+  white-space: pre-wrap; }
+
+.ui.node_segment {
+  padding: 0px; }
 
 /*# sourceMappingURL=sassycyto.css.map */

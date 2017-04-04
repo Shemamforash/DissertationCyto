@@ -1,5 +1,4 @@
 $standard-margin: 40px;
-$sidebar-width: 25%;
 $big-font: 20px;
 $normal-font: 12px;
 
@@ -26,8 +25,15 @@ body, .full_screen {
 }
 
 #graph_sidebar, #node_sidebar {
-  width: $sidebar-width;
   padding: $standard-margin;
+}
+
+#graph_sidebar {
+  width: 20%;
+}
+
+#node_sidebar {
+  width: 30%;
 }
 
 .tag_edit {
@@ -72,4 +78,12 @@ input {
 .user_button {
   height: 100%;
   width: 40px;
+}
+
+pre {
+  white-space: pre-wrap;
+}
+
+.ui.node_segment {
+  padding: 0px;
 }

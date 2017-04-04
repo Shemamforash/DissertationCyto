@@ -19,7 +19,9 @@ var Behaviour = (function () {
             file_selector: $('#file_selector'),
             tag_editor: $('#tag_editor'),
             trash_button: $('#trash_button'),
-            delete_node_button: $('#delete_node')
+            delete_node_button: $('#delete_node'),
+            variable_preview: $('#variable_preview'),
+            code_preview: $('#code_preview')
         };
     };
 
@@ -59,7 +61,9 @@ var Behaviour = (function () {
         });
         elements.reset_button.click(reset_during_edit);
         elements.save_button.click(save_graph_to_file);
-        elements.load_button.click(function(){elements.file_selector.click()});
+        elements.load_button.click(function () {
+            elements.file_selector.click()
+        });
         elements.file_selector.multiple = false;
         elements.file_selector.on("change", load_graph_from_file);
         elements.trash_button.click(destroy_graph);
@@ -77,6 +81,7 @@ var Behaviour = (function () {
     }
 
     function save_graph_to_file() {
+        CytoGraph.get_cy().elements().removeClass("highlighted");
         var cy_json = CytoGraph.get_cy().json();
         var saved_nodes = get_nodes_to_save();
         var save_obj = {
@@ -120,14 +125,14 @@ var Behaviour = (function () {
         elements.tag_editor.empty();
     }
 
-    function destroy_graph(){
+    function destroy_graph() {
         CytoGraph.get_cy().remove(CytoGraph.get_cy().elements());
         Graph.clear();
         reset_during_edit();
         CytoGraph.reset_current_node();
     }
 
-    function delete_node(){
+    function delete_node() {
         var node = CytoGraph.get_current_node();
         CytoGraph.get_cy().remove(node.connectedEdges());
         CytoGraph.get_cy().remove(node);
@@ -144,10 +149,10 @@ var Behaviour = (function () {
         for (var resource in resources) {
             resource = resources[resource];
             var new_div = $('<div class="ui button inverted green resource_button">' + resource.name + "  :  " + resource.value + '</div>');
-            new_div.click(function(){
+            new_div.click(function () {
                 var resource_name = resource.name;
 
-                return function() {
+                return function () {
                     if ($(this).hasClass("inverted")) {
                         $('.resource_button').addClass("inverted");
                         $(this).removeClass("inverted");
@@ -186,6 +191,38 @@ var Behaviour = (function () {
         var node = CytoGraph.get_current_node();
         $('#code_textarea').val(Graph.get_rules_as_string());
         $('#node_name_input').val(node.data().label);
+        var variable_string = "";
+        node = Graph.get_nodes()[node.id()];
+        for (var variable in node.variables) {
+            variable = node.variables[variable];
+            variable_string += variable.name + "\n";
+            variable_string += "    Value: " + variable.current_value + " Max/Min/Reset: ";
+            if (variable.max_value !== undefined) {
+                variable_string += variable.max_value;
+            } else {
+                variable_string += "-"
+            }
+            variable_string += "/";
+            if (variable.min_value !== undefined) {
+                variable_string += variable.min_value;
+            } else {
+                variable_string += "-"
+            }
+            variable_string += "/";
+            if (variable.reset_value !== undefined) {
+                variable_string += variable.reset_value;
+            } else {
+                variable_string += "-"
+            }
+            variable_string += "\n\n";
+        }
+        elements.variable_preview.text(variable_string);
+        var rule_string = "";
+        for(var i = 0; i < node.rules.length; ++i){
+            console.log(node.rules[i]);
+            rule_string += node.rules[i].rule_text + "\n\n";
+        }
+        elements.code_preview.text(rule_string);
     }
 
     function edit_node_name() {
