@@ -123,6 +123,20 @@ var Behaviour = (function () {
         for (var resource in resources) {
             resource = resources[resource];
             var new_div = $('<div class="ui button inverted green resource_button">' + resource.name + "  :  " + resource.value + '</div>');
+            new_div.click(function(){
+                var resource_name = resource.name;
+
+                return function() {
+                    if ($(this).hasClass("inverted")) {
+                        $('.resource_button').addClass("inverted");
+                        $(this).removeClass("inverted");
+                        Graph.prims(resource_name);
+                    } else {
+                        $('.resource_button').addClass("inverted");
+                        Graph.prims(null);
+                    }
+                };
+            }());
             elements.tag_editor.append(new_div);
         }
     }

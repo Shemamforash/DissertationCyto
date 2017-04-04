@@ -5,12 +5,41 @@
 var CytoGraph = function () {
     var current_node = null;
     var cy = {};
-    var behaviour = {
+
+
+    function mouse_to_world_coordinates(x, y) {
+        var zoom = cy.zoom();
+        x = x / zoom + cy.extent().x1;
+        y = y / zoom + cy.extent().y1;
+        return {
+            x: x,
+            y: y
+        };
+    }
+
+    return {
+        init: function () {
+            load_graph();
+            load_nodes();
+        },
+        bind: function () {
+            //start click
+            cy.on('tapstart', CytoGraph.select_node);
+            //end click
+            cy.on('tapend', CytoGraph.change_or_move_node);
+            //right click
+            cy.on('cxttap', 'node', CytoGraph.link_nodes);
+        },
+        set_cy: function (new_cy) {
+            cy = new_cy;
+            CytoGraph.bind();
+        },
         select_node: function (event) {
             var target = event.cyTarget;
             if (target !== cy) {
                 console.log(target.id());
                 current_node = Graph.get_nodes()[target.id()];
+                console.log(Graph.get_nodes());
                 Behaviour.update_node_sidebar();
             }
         },
@@ -38,43 +67,12 @@ var CytoGraph = function () {
                             target: target.id()
                         }
                     });
-                    if (!Graph.edges.add(new_edge)) {
+                    if (!Graph.add_edge(new_edge)) {
                         cy.remove(new_edge);
                     }
                 }
             }
-        }
-    };
-
-    function bind() {
-        //start click
-        cy.on('tapstart', behaviour.select_node);
-        //end click
-        cy.on('tapend', behaviour.change_or_move_node);
-        //right click
-        cy.on('cxttap', 'node', behaviour.link_nodes);
-    }
-
-    function mouse_to_world_coordinates(x, y) {
-        var zoom = cy.zoom();
-        x = x / zoom + cy.extent().x1;
-        y = y / zoom + cy.extent().y1;
-        return {
-            x: x,
-            y: y
-        };
-    }
-
-    return {
-        init: function(){
-            load_graph();
-            load_nodes();
         },
-        set_cy: function(new_cy){
-            cy = new_cy;
-            bind();
-        },
-        behaviour: behaviour,
         add_node: function (event) {
             var snap_position = mouse_to_world_coordinates(event.x, event.y);
             var new_node = cy.add({
@@ -106,10 +104,10 @@ var CytoGraph = function () {
                 });
             }
         },
-        get_cy: function(){
+        get_cy: function () {
             return cy;
         },
-        get_current_node: function(){
+        get_current_node: function () {
             return current_node;
         }
     };

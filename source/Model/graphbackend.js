@@ -7,6 +7,32 @@ var Graph = (function () {
     var node_number = 0;
     var resources = {};
 
+    function prims(resource_name){
+        var node, wanted_nodes = [], path = [];
+        CytoGraph.get_cy().elements().removeClass("highlighted");
+
+        if(resource_name !== null) {
+            for (node in nodes) {
+                node = nodes[node];
+                if (node.resource_tags.indexOf(resource_name) !== -1) {
+                    node.addClass("highlighted");
+                    wanted_nodes.push(node);
+                }
+            }
+
+            for (var i = 0; i < wanted_nodes.length; ++i) {
+                node = wanted_nodes[i];
+                var dijkstra_result = CytoGraph.get_cy().elements().dijkstra(node);
+                for (var j = 0; j < wanted_nodes.length; ++j) {
+                    if (j !== i) {
+                        // arr_union(dijkstra_result.pathTo(wanted_nodes[j]));
+                        dijkstra_result.pathTo(wanted_nodes[j]).addClass("highlighted");
+                    }
+                }
+            }
+        }
+    }
+
     function add_edge(edge) {
         var source = edge.source().id();
         var target = edge.target().id();
@@ -197,6 +223,7 @@ var Graph = (function () {
     }
 
     return {
+        prims: prims,
         add_edge: add_edge,
         create_rules: create_rules,
         get_rules_as_string: get_rules_as_string,

@@ -47,20 +47,22 @@ function load_graph(existing_cy) {
             style: {
                 'shape': 'rectangle',
                 'label': 'data(label)'
-            }
+            },
         }]
-    });
-    cy.minZoom(0.5);
-    cy.maxZoom(3);
-    cy.snapToGrid({
-        gridSpacing: 80,
-        snapToGrid: true
     });
     if (existing_cy) {
         cy.json(JSON.parse(existing_cy));
     } else if (localStorage.previous_graph !== undefined && localStorage.previous_graph !== "undefined") {
         cy.json(JSON.parse(localStorage.previous_graph));
     }
+    cy.style().selector('edge.highlighted').style({'line-color': 'cyan'});
+    cy.style().selector('node.highlighted').style({'border-color': 'cyan', 'border-width': '5'});
+    cy.minZoom(0.5);
+    cy.maxZoom(3);
+    cy.snapToGrid({
+        gridSpacing: 80,
+        snapToGrid: true
+    });
     CytoGraph.set_cy(cy);
 }
 
