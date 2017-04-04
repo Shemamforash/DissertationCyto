@@ -7,11 +7,11 @@ var Graph = (function () {
     var node_number = 0;
     var resources = {};
 
-    function prims(resource_name){
+    function prims(resource_name) {
         var node, wanted_nodes = [], path = [];
         CytoGraph.get_cy().elements().removeClass("highlighted");
 
-        if(resource_name !== null) {
+        if (resource_name !== null) {
             for (node in nodes) {
                 node = nodes[node];
                 if (node.resource_tags.indexOf(resource_name) !== -1) {
@@ -54,7 +54,7 @@ var Graph = (function () {
 
     function create_rules(rules) {
         var graph_node = CytoGraph.get_current_node();
-        if(rules) {
+        if (rules) {
             if (graph_node) {
                 graph_node.rules = [];
                 for (var i = 0; i < rules.length; ++i) {
@@ -113,6 +113,18 @@ var Graph = (function () {
         }
     }
 
+    function reset_variable_values() {
+        for (var node in nodes) {
+            node = nodes[node];
+            for (var variable in node.variables) {
+                variable = node.variables[variable];
+                if (variable.reset_value !== undefined) {
+                    variable.current_value = variable.reset_value;
+                }
+            }
+        }
+    }
+
     function reset_simulation() {
         reset_variables();
         for (var node in nodes) {
@@ -127,9 +139,24 @@ var Graph = (function () {
         }
     }
 
+    function check_bounds() {
+        for (var node in nodes) {
+            node = nodes[node];
+            for (var variable in node.variables) {
+                variable = node.variables[variable];
+                if (variable.max_value !== undefined && variable.current_value > variable.max_value) {
+                    variable.current_value = variable.max_value;
+                } else if (variable.min_value !== undefined && variable.current_value < variable.min_value) {
+                    variable.current_value = variable.max_value;
+                }
+            }
+        }
+    }
+
     function evaluate() {
         var i;
         var internal_rules = [], source_rules = [], sink_rules = [];
+        reset_variable_values();
         for (var node in nodes) {
             node = nodes[node];
             for (var variable in node.variables) {
@@ -156,14 +183,6 @@ var Graph = (function () {
                         console.log("invalid rule type " + node.rules[i].rule_type);
                         break;
                 }
-                for (var variable in node.variables) {
-                    variable = node.variables[variable];
-                    if (variable.max_value !== undefined && variable.current_value > variable.max_value) {
-                        variable.current_value = variable.max_value;
-                    } else if (variable.min_value !== undefined && variable.current_value < variable.min_value) {
-                        variable.current_value = variable.max_value;
-                    }
-                }
             }
         }
 
@@ -176,12 +195,15 @@ var Graph = (function () {
 
         for (i = 0; i < internal_rules.length; ++i) {
             eval(internal_rules[i].code);
+            check_bounds();
         }
         for (i = 0; i < source_rules.length; ++i) {
             eval(source_rules[i].code);
+            check_bounds();
         }
         for (i = 0; i < sink_rules.length; ++i) {
             eval(sink_rules[i].code);
+            check_bounds();
         }
     }
 
@@ -224,9 +246,9 @@ var Graph = (function () {
         return node_number;
     }
 
-    function remove_node(node){
-        for(var i = 0; i < edges.length; ++i){
-            if(edges[i].source().id() === node.id() || edges[i].target().id() === node.id()){
+    function remove_node(node) {
+        for (var i = 0; i < edges.length; ++i) {
+            if (edges[i].source().id() === node.id() || edges[i].target().id() === node.id()) {
                 edges.splice(i, 1);
                 break;
             }
@@ -238,7 +260,7 @@ var Graph = (function () {
         console.log(node);
     }
 
-    function clear(){
+    function clear() {
         edges = [];
         nodes = {};
         resources = {};

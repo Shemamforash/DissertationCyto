@@ -8,7 +8,7 @@
 var Evaluator = (function () {
     var elements = {
         rule_types: ["INTERNAL", "SOURCE", "SINK"],
-        keywords: ["if", "else", "then", "endif", "reset_simulation", "min", "max", "VAR", ";", ":", "(", ")", "random", ","],
+        keywords: ["if", "else", "then", "endif", "reset", "min", "max", "VAR", ";", ":", "(", ")", "random", ","],
         conditional_operators: ["<", ">", "<=", ">=", "===", "!="],
         logical_operators: ["&&", "||", "!"],
         assignment_operators: ["*=", "+=", "-=", "/=", "^=", "++", "--", "="],
@@ -433,25 +433,29 @@ var Evaluator = (function () {
         var min_value = undefined;
         var reset_value = undefined;
         for (var i = 0; i < tokens.length; ++i) {
-            if (tokens[i].type === "min") {
+
+            if (tokens[i].value === "min") {
+                console.log(tokens[i + 1]);
+                console.log(tokens[i + 2]);
                 if (check_valid_assignment(i)) {
-                    min_value = tokens[i + 2].value;
+                    i += 2;
+                    min_value = tokens[i].value;
                 } else {
                     return wrap_message("error", "min value assignment syntax error");
                 }
-            }
-            else if (tokens[i].type === "max") {
+            } else if (tokens[i].value === "max") {
                 if (check_valid_assignment(i)) {
-                    max_value = tokens[i + 2].value;
+                    i += 2;
+                    max_value = tokens[i].value;
                 } else {
                     return wrap_message("error", "max value assignment syntax error");
                 }
-
-            } else if (tokens[i].type === "reset_simulation") {
+            } else if (tokens[i].value === "reset") {
                 if (check_valid_assignment(i)) {
-                    reset_value = tokens[i + 2].value;
+                    i += 2;
+                    reset_value = tokens[i].value;
                 } else {
-                    return wrap_message("error", "reset_simulation value assignment syntax error");
+                    return wrap_message("error", "reset value assignment syntax error");
                 }
             }
         }
@@ -461,22 +465,23 @@ var Evaluator = (function () {
             "initial_value:" + initial_value + "," +
             "max_value:" + max_value + "," +
             "min_value:" + min_value + "," +
-            "reset_value:" + reset_value + "}" +
-            "change_value: function(amnt){ if(current_value + amnt > max_value) {current_value = max_value;} else if (current_value - amnt < min_value){current_value = min_value;}}";
-
+            "reset_value:" + reset_value + "}";
         var code = "Graph.get_nodes()['" + economy_node.id() + "'].variables['" + variable_name + "'] = " + new_variable;
         eval(code);
         return wrap_message("success", code);
 
         function check_valid_assignment(i) {
-            if (tokens[i + 1].type !== "=") {
-                //should be assignment
-                return false;
-            } else if (tokens[i + 2].type !== "number") {
-                //should be a number
-                return false;
+            if(i + 2 < tokens.length) {
+                if (tokens[i + 1].value !== "=") {
+                    //should be assignment
+                    return false;
+                } else if (tokens[i + 2].type !== "number") {
+                    //should be a number
+                    return false;
+                }
+                return true;
             }
-            return true;
+            return false;
         }
     };
     function create_rule(tokens, economy_node, type) {

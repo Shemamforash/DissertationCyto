@@ -81,7 +81,6 @@ function load_nodes(saved_nodes) {
             for (var j = 0; j < stored_nodes.length; ++j) {
                 rule_node = stored_nodes[j];
                 if (rule_node.id === graph_node.id()) {
-                    console.log(rule_node.variables);
                     graph_node.variables = rule_node.variables;
                     for (var variable in graph_node.variables) {
                         variable = graph_node.variables[variable];
