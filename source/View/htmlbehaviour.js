@@ -17,7 +17,9 @@ var Behaviour = (function () {
             save_button: $('#save_button'),
             load_button: $('#load_button'),
             file_selector: $('#file_selector'),
-            tag_editor: $('#tag_editor')
+            tag_editor: $('#tag_editor'),
+            trash_button: $('#trash_button'),
+            delete_node_button: $('#delete_node')
         };
     };
 
@@ -60,6 +62,8 @@ var Behaviour = (function () {
         elements.load_button.click(function(){elements.file_selector.click()});
         elements.file_selector.multiple = false;
         elements.file_selector.on("change", load_graph_from_file);
+        elements.trash_button.click(destroy_graph);
+        elements.delete_node_button.click(delete_node);
         $('#cancel_rule_button').click(function () {
             discard_rule();
         });
@@ -114,6 +118,23 @@ var Behaviour = (function () {
     function reset_during_edit() {
         Graph.reset_simulation();
         elements.tag_editor.empty();
+    }
+
+    function destroy_graph(){
+        CytoGraph.get_cy().remove(CytoGraph.get_cy().elements());
+        Graph.clear();
+        reset_during_edit();
+        CytoGraph.reset_current_node();
+    }
+
+    function delete_node(){
+        var node = CytoGraph.get_current_node();
+        CytoGraph.get_cy().remove(node.connectedEdges());
+        CytoGraph.get_cy().remove(node);
+        Graph.remove_node(node);
+        toggle_node_sidebar(false);
+        reset_during_edit();
+        CytoGraph.reset_current_node();
     }
 
     function simulate() {

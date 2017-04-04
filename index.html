@@ -47,19 +47,30 @@
         <div class="ui button icon inverted green user_button" id="load_button"><i
                 class="icon folder"></i>
         </div>
+        <div class="ui button icon inverted green user_button" id="trash_button"><i
+                class="icon trash"></i>
+        </div>
         <input type="file" accept=".json" id="file_selector" style="position: fixed; top: -100px;">
     </div>
 </div>
 
 <!--sidebar to control node attributes-->
 <div id="node_sidebar" class="ui right inverted sidebar vertical menu">
-    <div class="ui icon disabled input inverted transparent fluid title green h1">
-        <input class="ui title green h1" style="height: 30px" type="text" id="node_name_input" placeholder="Name">
-        <div class="ui icon button inverted right attached" id="edit_node_name"><i class="edit icon"></i></div>
+    <div style="height: calc(100% - 100px);">
+        <div class="ui icon disabled input inverted transparent fluid title green h1">
+            <input class="ui title green h1" style="height: 30px" type="text" id="node_name_input" placeholder="Name">
+            <div class="ui icon button inverted right attached" id="edit_node_name"><i class="edit icon"></i></div>
+        </div>
     </div>
-    <div class="ui button inverted white icon fluid" id="add_rule">
-        Edit Rules
-        <i class="icon edit"></i>
+    <div style="height: 100px;">
+        <div class="ui button green icon fluid" id="add_rule">
+            Edit Rules
+            <i class="icon edit"></i>
+        </div>
+        <div class="ui button red icon fluid" id="delete_node">
+            Delete Node
+            <i class="icon trash"></i>
+        </div>
     </div>
 </div>
 

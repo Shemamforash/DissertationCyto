@@ -54,17 +54,19 @@ var Graph = (function () {
 
     function create_rules(rules) {
         var graph_node = CytoGraph.get_current_node();
-        if (graph_node) {
-            graph_node.rules = [];
-            for (var i = 0; i < rules.length; ++i) {
-                var new_rule = null;
-                new_rule = {
-                    rule_text: rules[i].rule_text,
-                    code: rules[i].code,
-                    rule_type: rules[i].rule_type,
-                    layer: rules[i].layer
-                };
-                graph_node.rules.push(new_rule);
+        if(rules) {
+            if (graph_node) {
+                graph_node.rules = [];
+                for (var i = 0; i < rules.length; ++i) {
+                    var new_rule = null;
+                    new_rule = {
+                        rule_text: rules[i].rule_text,
+                        code: rules[i].code,
+                        rule_type: rules[i].rule_type,
+                        layer: rules[i].layer
+                    };
+                    graph_node.rules.push(new_rule);
+                }
             }
         }
     }
@@ -222,7 +224,30 @@ var Graph = (function () {
         return node_number;
     }
 
+    function remove_node(node){
+        for(var i = 0; i < edges.length; ++i){
+            if(edges[i].source().id() === node.id() || edges[i].target().id() === node.id()){
+                edges.splice(i, 1);
+                break;
+            }
+        }
+        console.log(nodes);
+        console.log(node);
+        delete nodes[node.id()];
+        console.log(nodes);
+        console.log(node);
+    }
+
+    function clear(){
+        edges = [];
+        nodes = {};
+        resources = {};
+        node_number = 0;
+    }
+
     return {
+        remove_node: remove_node,
+        clear: clear,
         prims: prims,
         add_edge: add_edge,
         create_rules: create_rules,

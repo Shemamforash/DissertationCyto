@@ -18,6 +18,9 @@ var CytoGraph = function () {
     }
 
     return {
+        reset_current_node: function(){
+            current_node = null;
+        },
         init: function () {
             load_graph();
             load_nodes();
