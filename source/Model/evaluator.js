@@ -8,7 +8,7 @@
 var Evaluator = (function () {
     var elements = {
         rule_types: ["INTERNAL", "SOURCE", "SINK"],
-        keywords: ["if", "else", "then", "endif", "reset", "min", "max", "VAR", ";", ":", "(", ")", "random", ","],
+        keywords: ["if", "else", "then", "endif", "reset", "min", "max", "VAR", ";", ":", "(", ")", "random", ",", "//"],
         conditional_operators: ["<", ">", "<=", ">=", "===", "!="],
         logical_operators: ["&&", "||", "!"],
         assignment_operators: ["*=", "+=", "-=", "/=", "^=", "++", "--", "="],
@@ -495,7 +495,7 @@ var Evaluator = (function () {
             return "Nothing Entered";
         }
         for (i = 0; i < rules.length; ++i) {
-            if (/^\s+$/.test(rules[i]) || rules[i] === "") {
+            if (/^\s+$/.test(rules[i]) || rules[i] === "" || /\/\//.test(rules[i])) {
                 continue;
             }
             rules[i] = rules[i].trim();

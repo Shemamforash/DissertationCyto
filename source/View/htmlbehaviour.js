@@ -36,15 +36,10 @@ var Behaviour = (function () {
         $('.ui.sidebar').sidebar({
             transition: 'overlay',
             dimPage: false,
-            exclusive: true,
+            exclusive: false,
+            closable: false
         });
         elements.simulate_button.click(simulate);
-        elements.node_sidebar.sidebar({
-            closable: false,
-            transition: 'overlay',
-            dimPage: false,
-            exclusive: true
-        });
         elements.sidebar_opener.hover(function () {
             $(this).width("40px");
             $(this).text(">");
@@ -122,6 +117,7 @@ var Behaviour = (function () {
     function reset_during_edit() {
         Graph.reset_simulation();
         elements.tag_editor.empty();
+        update_node_sidebar();
     }
 
     function destroy_graph() {
@@ -139,6 +135,7 @@ var Behaviour = (function () {
         toggle_node_sidebar(false);
         reset_during_edit();
         CytoGraph.reset_current_node();
+        update_node_sidebar();
     }
 
     function simulate() {
@@ -164,6 +161,7 @@ var Behaviour = (function () {
             }());
             elements.tag_editor.append(new_div);
         }
+        update_node_sidebar();
     }
 
     function accept_rule() {
@@ -180,10 +178,12 @@ var Behaviour = (function () {
                 $('#error_message').text(result.message);
             }
         }
+        update_node_sidebar();
     }
 
     function discard_rule() {
         $('.ui.modal').modal('hide');
+        update_node_sidebar();
     }
 
     function update_node_sidebar() {
@@ -231,11 +231,15 @@ var Behaviour = (function () {
         elements.edit_node_name.parent().toggleClass('disabled');
     }
 
-    function toggle_graph_sidebar() {
-        if (elements.graph_sidebar.hasClass('visible')) {
+    function toggle_graph_sidebar(close) {
+        if(close === false){
             elements.graph_sidebar.sidebar('hide');
         } else {
-            elements.graph_sidebar.sidebar('show');
+            if (elements.graph_sidebar.hasClass('visible')) {
+                elements.graph_sidebar.sidebar('hide');
+            } else {
+                elements.graph_sidebar.sidebar('show');
+            }
         }
     }
 

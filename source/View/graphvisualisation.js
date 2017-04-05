@@ -39,18 +39,19 @@ var CytoGraph = function () {
         },
         select_node: function (event) {
             var target = event.cyTarget;
-            if (target !== cy) {
-                console.log(target.id());
+            console.log(target);
+            if (target !== cy && target.group() === "nodes") {
                 current_node = Graph.get_nodes()[target.id()];
-                console.log(Graph.get_nodes());
                 Behaviour.update_node_sidebar();
+            } else {
+                Behaviour.toggle_graph_sidebar(false);
             }
         },
         change_or_move_node: function (event) {
             if (current_node) {
                 Graph.update_position(current_node);
             }
-            if (event.cyTarget === cy || event.cyTarget.group() !== "nodes") {
+            if (event.cyTarget === cy || event.cyTarget.group() === "edges") {
                 Behaviour.toggle_node_sidebar(false);
             } else {
                 cy.nodes().deselect();
