@@ -17,11 +17,6 @@ var Evaluator = (function () {
         button: {},
         original_variable_values: []
     };
-    function print_tokens(tokens) {
-        for (var i = 0; i < tokens.length; ++i) {
-            console.log(tokens[i]);
-        }
-    };
     function tag_ifs(tokens) {
         var if_counter = 0, then_counter = 0, else_counter = 0, i;
         var current_token;

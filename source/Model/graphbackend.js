@@ -7,7 +7,7 @@ var Graph = (function () {
     var node_number = 0;
     var resources = {};
 
-    function prims(resource_name) {
+    function find_sub_network(resource_name) {
         var node, wanted_nodes = [], path = [];
         CytoGraph.get_cy().elements().removeClass("highlighted");
 
@@ -270,7 +270,7 @@ var Graph = (function () {
     return {
         remove_node: remove_node,
         clear: clear,
-        prims: prims,
+        prims: find_sub_network,
         add_edge: add_edge,
         create_rules: create_rules,
         get_rules_as_string: get_rules_as_string,

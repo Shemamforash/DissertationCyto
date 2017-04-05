@@ -12,16 +12,16 @@ $(document).ready(function () {
     CytoGraph.init();
 });
 
-$(window).on("beforeunload", save);
+$(window).on("beforeunload", save_to_local_storage);
 
-function save() {
+function save_to_local_storage() {
     CytoGraph.get_cy().elements().removeClass("highlighted");
-    var saved_nodes = get_nodes_to_save();
+    var saved_nodes = convert_nodes_for_saving();
     localStorage.previous_graph = JSON.stringify(CytoGraph.get_cy().json());
     localStorage.nodes = JSON.stringify(saved_nodes);
 }
 
-function get_nodes_to_save() {
+function convert_nodes_for_saving() {
     var saved_nodes = [], node, existing_nodes = Graph.get_nodes();
     for (node in existing_nodes) {
         node = existing_nodes[node];

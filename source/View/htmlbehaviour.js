@@ -2,7 +2,6 @@
  * Created by Sam on 22/01/2017.
  */
 var Behaviour = (function () {
-    var editing = false;
     var elements = function () {
         return {
             graph_sidebar: $('#graph_sidebar'),
@@ -83,7 +82,7 @@ var Behaviour = (function () {
     function save_graph_to_file() {
         CytoGraph.get_cy().elements().removeClass("highlighted");
         var cy_json = CytoGraph.get_cy().json();
-        var saved_nodes = get_nodes_to_save();
+        var saved_nodes = convert_nodes_for_saving();
         var save_obj = {
             cy: JSON.stringify(cy_json),
             nodes: JSON.stringify(saved_nodes, null, 4),
