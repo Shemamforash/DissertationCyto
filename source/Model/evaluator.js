@@ -8,7 +8,7 @@
 var Evaluator = (function () {
     var elements = {
         rule_types: ["INTERNAL", "SOURCE", "SINK"],
-        keywords: ["if", "else", "then", "endif", "reset", "min", "max", "VAR", ";", ":", "(", ")", "random", ",", "//"],
+        keywords: ["if", "else", "then", "endif", "reset", "min", "max", "VAR", ";", ":", "(", ")", "random", ",", "//", "floor"],
         conditional_operators: ["<", ">", "<=", ">=", "===", "!="],
         logical_operators: ["&&", "||", "!"],
         assignment_operators: ["*=", "+=", "-=", "/=", "^=", "++", "--", "="],
@@ -254,6 +254,9 @@ var Evaluator = (function () {
         if (elements.keywords.indexOf(token) === -1) {
             return false;
         } else {
+            if(token === "floor"){
+                token = "Math.floor";
+            }
             return wrap_token("keyword", token);
         }
     };
@@ -396,6 +399,13 @@ var Evaluator = (function () {
             } else if (next_token.type == "resource variable") {
                 next_token.value += ".value";
                 final_stmt += next_token.value;
+            } else if (next_token.value === "floor"){
+                var next_token = tokens.shift();
+                final_stmt += next_token.value;
+                if(next_token.value !== "("){
+                    return wrap_message("error", "floor must be called on a value not a statement");
+                }
+                final_stmt += next_token.value;
             } else {
                 final_stmt += next_token.value;
             }
@@ -495,13 +505,21 @@ var Evaluator = (function () {
             return "Nothing Entered";
         }
         for (i = 0; i < rules.length; ++i) {
-            if (/^\s+$/.test(rules[i]) || rules[i] === "" || /\/\//.test(rules[i])) {
+            if (/^\s+$/.test(rules[i]) || rules[i] === "") {
                 continue;
             }
+
             rules[i] = rules[i].trim();
             var rule = {
                 rule_text: rules[i] + ";"
             };
+            if(/\/\//.test(rules[i])){
+                rule.code = "";
+                rule.rule_type = "INACTIVE";
+                rule.layer = 0;
+                validated_rules.push(rule);
+                continue;
+            }
             rules[i] = rules[i].split(" ");
             var interpretation_result = interpret_rule(rules[i], economy_node);
             reset_variable_values();
@@ -510,10 +528,6 @@ var Evaluator = (function () {
                 rule.rule_type = interpretation_result.rule_type;
                 rule.layer = interpretation_result.layer;
                 validated_rules.push(rule);
-                console.log(economy_node);
-                console.log(interpretation_result);
-                console.log(interpretation_result.message);
-                // console.log(eval(interpretation_result.message));
             } else {
                 return interpretation_result;
             }

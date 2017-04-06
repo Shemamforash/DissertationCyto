@@ -51,7 +51,7 @@ var Behaviour = (function () {
         elements.rules_editor_opener.click(function () {
             $('#rule_name_input').val("");
             $(elements.rules_editor).modal('show');
-
+            $('#code_textarea').val(Graph.get_rules_as_string());
         });
         elements.reset_button.click(reset_during_edit);
         elements.save_button.click(save_graph_to_file);
@@ -144,7 +144,7 @@ var Behaviour = (function () {
         var resources = Graph.get_resources();
         for (var resource in resources) {
             resource = resources[resource];
-            var new_div = $('<div class="ui button inverted green resource_button">' + resource.name + "  :  " + resource.value + '</div>');
+            var new_div = $('<div class="ui button inverted green resource_button">' + resource.name + "  :  " + Math.floor(resource.value * 100) / 100 + '</div>');
             new_div.click(function () {
                 var resource_name = resource.name;
 
@@ -188,40 +188,42 @@ var Behaviour = (function () {
 
     function update_node_sidebar() {
         var node = CytoGraph.get_current_node();
-        $('#code_textarea').val(Graph.get_rules_as_string());
-        $('#node_name_input').val(node.data().label);
-        var variable_string = "";
-        node = Graph.get_nodes()[node.id()];
-        for (var variable in node.variables) {
-            variable = node.variables[variable];
-            variable_string += variable.name + "\n";
-            variable_string += "    Value: " + variable.current_value + " Max/Min/Reset: ";
-            if (variable.max_value !== undefined) {
-                variable_string += variable.max_value;
-            } else {
-                variable_string += "-"
+        if(node) {
+            $('#node_name_input').val(node.data().label);
+            var variable_string = "";
+            node = Graph.get_nodes()[node.id()];
+            for (var variable in node.variables) {
+                variable = node.variables[variable];
+                variable_string += variable.name + "\n";
+                variable_string += "    Value: " + Math.floor(variable.current_value * 100) / 100 + " Max/Min/Reset: ";
+                if (variable.max_value !== undefined) {
+                    variable_string += variable.max_value;
+                } else {
+                    variable_string += "-"
+                }
+                variable_string += "/";
+                if (variable.min_value !== undefined) {
+                    variable_string += variable.min_value;
+                } else {
+                    variable_string += "-"
+                }
+                variable_string += "/";
+                if (variable.reset_value !== undefined) {
+                    variable_string += variable.reset_value;
+                } else {
+                    variable_string += "-"
+                }
+                variable_string += "\n\n";
             }
-            variable_string += "/";
-            if (variable.min_value !== undefined) {
-                variable_string += variable.min_value;
-            } else {
-                variable_string += "-"
+            elements.variable_preview.text(variable_string);
+            var rule_string = "";
+            for (var i = 0; i < node.rules.length; ++i) {
+                if (node.rules[i].rule_type !== "INACTIVE") {
+                    rule_string += node.rules[i].rule_text + "\n\n";
+                }
             }
-            variable_string += "/";
-            if (variable.reset_value !== undefined) {
-                variable_string += variable.reset_value;
-            } else {
-                variable_string += "-"
-            }
-            variable_string += "\n\n";
+            elements.code_preview.text(rule_string);
         }
-        elements.variable_preview.text(variable_string);
-        var rule_string = "";
-        for(var i = 0; i < node.rules.length; ++i){
-            console.log(node.rules[i]);
-            rule_string += node.rules[i].rule_text + "\n\n";
-        }
-        elements.code_preview.text(rule_string);
     }
 
     function edit_node_name() {
