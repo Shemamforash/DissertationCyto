@@ -12,6 +12,8 @@ var Behaviour = (function () {
             rules_editor_opener: $('#add_rule'),
             node_name_input: $('#node_name_input'),
             simulate_button: $('#simulate_step_button'),
+            simulate_button_5: $('#simulate_step_button_5'),
+            simulate_button_10: $('#simulate_step_button_10'),
             reset_button: $('#reset_button'),
             save_button: $('#save_button'),
             load_button: $('#load_button'),
@@ -39,7 +41,9 @@ var Behaviour = (function () {
             exclusive: false,
             closable: false
         });
-        elements.simulate_button.click(simulate);
+        elements.simulate_button.click(function(){simulate(1);});
+        elements.simulate_button_5.click(function(){simulate(5);});
+        elements.simulate_button_10.click(function(){simulate(10);});
         elements.sidebar_opener.hover(function () {
             $(this).width("40px");
             $(this).text(">");
@@ -138,8 +142,10 @@ var Behaviour = (function () {
         update_node_sidebar();
     }
 
-    function simulate() {
-        Graph.evaluate();
+    function simulate(no_times) {
+        for(var i = 0; i < no_times; ++i){
+            Graph.evaluate();
+        }
         elements.tag_editor.empty();
         var resources = Graph.get_resources();
         for (var resource in resources) {

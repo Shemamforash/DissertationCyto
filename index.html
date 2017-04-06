@@ -34,9 +34,15 @@
         <div class="content inverted ui buttons vertical fluid" id="tag_editor">
         </div>
     </div>
-    <div class="ui center aligned segment inverted" style="height: 40px; margin: 0px; padding: 0px;">
+    <div class="ui center aligned inverted buttons" style="height: 40px; margin: 0px; padding: 0px; width: 100%;">
         <div class="ui button icon inverted green user_button" id="simulate_step_button"><i
                 class="icon chevron right"></i>
+        </div>
+        <div class="ui button icon inverted green user_button" id="simulate_step_button_5"><i
+                class="icon chevron right"></i>5
+        </div>
+        <div class="ui button icon inverted green user_button" id="simulate_step_button_10"><i
+                class="icon chevron right"></i>10
         </div>
         <div class="ui button icon inverted green user_button" id="reset_button"><i
                 class="icon undo"></i>
@@ -64,11 +70,15 @@
         <div class="ui segment inverted node_segment" style="height: 40px; width: 100%">
             <h3>Internal Variables</h3>
         </div>
-        <div class="ui segment inverted node_segment"><pre id="variable_preview"></pre></div>
+        <div class="ui segment inverted node_segment">
+            <pre id="variable_preview"></pre>
+        </div>
         <div class="ui segment inverted node_segment" style="height: 40px; width: 100%">
             <h3>Rule Preview</h3>
         </div>
-        <div class="ui segment inverted node_segment"><pre id="code_preview" ></pre></div>
+        <div class="ui segment inverted node_segment">
+            <pre id="code_preview"></pre>
+        </div>
     </div>
     <div style="height: 100px;">
         <div class="ui button green icon fluid" id="add_rule">
